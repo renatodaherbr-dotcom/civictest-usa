@@ -1,0 +1,439 @@
+.test-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100dvw;
+  height: 100dvh;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.test-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  width: min(92vw, 400px);
+  height: min(92dvh, 400px);  /* ✅ altura fixa */
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+  overflow: hidden;             /* ✅ nada vaza para fora */
+}
+
+/* ── HEADER ── */
+.test-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.test-counter { font-weight: 700; color: #333; }
+
+.test-score-live { font-size: 0.78rem; color: #646cff; font-weight: 600; }
+
+.btn-test-close {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* ── PROGRESS BAR ── */
+.test-progress-bg {
+  width: 100%;
+  height: 4px;
+  background: #eee;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.test-progress-fill {
+  height: 100%;
+  background: #646cff;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* ── TEXTAREAS ── */
+.test-ta-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  height: 200px;   /* altura total disponível */
+}
+
+/* pergunta */
+.test-ta-q {
+  flex: 1 1 auto;
+  resize: none;
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 0.85rem;
+  font-family: inherit;
+  overflow: auto;
+  background-color: #D5F2C3;
+}
+
+
+/* Esconde Q quando mostra resposta */
+.test-show-answer .test-ta-q {
+  flex: 0;
+  height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  display: none;
+}
+
+/* Garante transição suave no estado normal */
+.test-ta-q {
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+}
+
+/* escondidas antes de Show Answer */
+.test-ta-short,
+.test-ta-full {
+  flex: 0 0 0;
+  min-height: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  resize: none;
+  box-sizing: border-box;
+  padding: 0 10px;
+  border-radius: 8px;
+}
+
+/* short = 30% */
+.test-ta-short {
+  background: #f0f7ff;
+  border: 1px solid #aac4dd;
+  font-size: 0.85rem;
+}
+
+/* full = 70% */
+.test-ta-full {
+  background: #fffbf0;
+  border: 1px solid #ddcc99;
+  font-size: 0.78rem;
+  color: #666;
+}
+
+/* ao mostrar resposta, esconde pergunta */
+.test-show-answer .test-ta-q {
+  flex: 0 0 0;
+  min-height: 0;
+  height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* 30% */
+.test-show-answer .test-ta-short {
+  flex: 3 1 0;
+  min-height: 0;
+  height: auto;
+  opacity: 1;
+  pointer-events: auto;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+/* 70% */
+.test-show-answer .test-ta-full {
+  flex: 7 1 0;
+  min-height: 0;
+  height: auto;
+  opacity: 1;
+  pointer-events: auto;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+/* ── BOTÕES DE AÇÃO ── */
+.test-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn-show-ans {
+  background: #646cff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn-correct {
+  flex: 1;
+  background: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-incorrect {
+  flex: 1;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ── RESULTADO FINAL ── */
+.test-result-badge {
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 800;
+  padding: 10px;
+  border-radius: 10px;
+  letter-spacing: 1px;
+}
+
+.test-pass { background: #dcfce7; color: #16a34a; }
+.test-fail { background: #fee2e2; color: #dc2626; }
+
+.test-score-big {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #333;
+}
+
+.test-pct {
+  text-align: center;
+  font-size: 1rem;
+  color: #555;
+  margin-top: -10px;
+}
+
+.test-bar-bg {
+  width: 100%;
+  height: 12px;
+  background: #eee;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.test-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.6s ease;
+}
+
+.test-rule {
+  text-align: center;
+  font-size: 0.72rem;
+  color: #999;
+}
+
+/* Resumo de dots */
+.test-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+.test-dot {
+  font-size: 0.75rem;
+  font-weight: 700;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.dot-ok   { background: #dcfce7; color: #16a34a; }
+.dot-fail { background: #fee2e2; color: #dc2626; }
+
+.btn-test-exit {
+  background: #646cff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+.test-early-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-continue-test {
+  background: none;
+  color: #646cff;
+  border: 1.5px solid #646cff;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-continue-test:hover {
+  background: #646cff;
+  color: white;
+}
+
+/* ── VOZ ─────────────────────────────────────────── */
+.test-voice-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 0 2px;
+  border-top: 1px solid #e0e0e0;
+  margin-top: -4px;
+}
+
+.test-voice-select {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 0.78rem;
+  background: white;
+  color: #333;
+  color-scheme: light;
+}
+
+.btn-test-voice {
+  background: none;
+  border: 1px solid #646cff;
+  border-radius: 6px;
+  color: #646cff;
+  cursor: pointer;
+  padding: 3px 10px;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.btn-test-voice:hover { background: #646cff; color: white; }
+
+.test-auto-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #555;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.test-auto-label input {
+  cursor: pointer;
+  accent-color: #646cff;
+  width: 14px;
+  height: 14px;
+}
+
+/* ── REVIEW NAV ─────────────────────────────────── */
+.test-review-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: #888;
+  padding: 4px 0;
+  border-top: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  margin: -6px 0;
+}
+
+.btn-test-rev {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 1px 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #646cff;
+  transition: background 0.15s;
+}
+
+.btn-test-rev:hover:not(:disabled) {
+  background: #646cff;
+  color: white;
+  border-color: #646cff;
+}
+
+.btn-test-rev:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-test-rev-back {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 1px 8px;
+  font-size: 0.72rem;
+  color: #888;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btn-test-rev-back:hover {
+  border-color: #888;
+  color: #333;
+}
+/* Review: mostra Q + short, sem esconder a pergunta */
+.test-reviewing .test-ta-q {
+  flex: 1 1 auto;
+  height: auto;
+  opacity: 1;
+  pointer-events: auto;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.test-reviewing .test-ta-short {
+  flex: 1 1 auto;
+  height: auto;
+  opacity: 1;
+  pointer-events: auto;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.rev-ok   { color: #16a34a; font-weight: 700; }
+.rev-fail { color: #dc2626; font-weight: 700; }

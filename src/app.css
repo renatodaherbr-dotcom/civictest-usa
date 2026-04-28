@@ -1,0 +1,503 @@
+.alinhar {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+#center {
+  position: relative;
+  max-width: 500px;   /* limita o tamanho */
+  min-width: 0;
+  width: calc(100% - 48px);   /* ✅ responsivo mobile sem overflow */
+  height: auto; 
+  margin: 10px auto;     /* centraliza na tela */  
+  border: 2px solid #c0c0c0;
+  border-radius: 16px;
+  padding: 16px;
+  background-color: #fafafa;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  align-items: center;
+}
+
+/* textarea de pergunta e resposta */
+section#center textarea {
+  width: calc(100% - 16px); /* ocupa toda a largura menos margens laterais */
+  margin: 5px 5px;          /* 4px topo/baixo, 8px laterais */
+  padding: 8px;             /* espaço interno */
+  font-size: 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  resize: vertical;         /* usuário só pode mudar altura */
+  box-sizing: border-box;   /* inclui padding e borda no width */
+}
+
+.status-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between; /* Empurra Level pra esquerda e Status pra direita */
+  width: 100%;
+  margin: -10px 0 5px; /* Ajusta o espaçamento vertical geral */
+  box-sizing: border-box;
+  padding: 0 5px;
+}
+
+/* Ajusta o label-status para não ter margens grandes e manter o tamanho */
+.label-status {
+  font-size: 0.7rem;
+  color: #555;
+  margin: 0; /* Remove o margin: -20px 0 10px antigo */
+  text-align: right; /* Alinha o texto à direita */
+}
+
+/* Mantém DB selector e btn PDF lado a lado */
+.db-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.db-select-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 25px;
+}
+
+.db-select-combo{
+  min-width: 225px;
+  width: 100%;
+  margin-left: 3%;
+}
+/* Botão PDF — pequeno, discreto, não desloca o select */
+.btn-pdf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  line-height: 1;
+  background: white;
+  color: #555;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  margin-right: 32px;
+}
+
+.btn-pdf:hover {
+  background-color: #646cff;
+  color: white;
+  border-color: #999;
+}
+
+/* Container fixo — evita layout shift */
+.textarea-wrapper {
+  position: relative;
+  width: 100%;
+  height: 28svh;          /* ✅ 28% da altura visível — escala em qualquer tela */
+  min-height: 120px;      /* ✅ nunca fica pequeno demais */
+  max-height: 260px;      /* ✅ não cresce demais em tablets grandes */
+  overflow: hidden;
+  padding-right: 15px;
+}
+
+/* Pergunta: ocupa 100% quando sozinha, 50% quando tem resposta */
+.ta-pergunta {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 95%;
+  background-color: #D5F2C3;
+  transition: height 0.5s ease;
+  pointer-events: none;
+}
+
+.mostrar-resposta .ta-pergunta {
+  height: 40%;        /* ✅ cede 40% para a resposta */
+  background-color: #C5E0B4;
+}
+
+/* Resposta: sempre 60% de baixo */
+.ta-resposta {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60%;
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+  pointer-events: none;
+}
+
+.mostrar-resposta .ta-resposta {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+/* Foco normal — todas as respostas visíveis */
+.ta-resposta:not([readonly]):focus {
+  outline: 2px solid #ffffff33;
+  border-color: inherit;
+}
+
+/* Foco especial — só as que foram editadas */
+.ta-resposta.ta-edited:focus {
+  border-color: #f0a500;
+  outline: 4px solid #f0a50055;
+}
+
+/* Indicador visual mesmo sem foco — sutil borda laranja */
+.ta-resposta.ta-edited {
+  border-color: #f0a50077;
+}
+
+.ta-editable-hint {
+  position: absolute;
+  right: 20px;
+  font-size: 0.7rem;
+  color: #aaa;
+  pointer-events: none;
+  z-index: 1;
+  /* split-5050: resposta ocupa 60% → topo da resposta em 40% */
+  bottom: calc(60% - 18px);
+}
+
+/* split-6040: resposta ocupa 40% → topo da resposta em 60% */
+.split-6040.mostrar-resposta .ta-editable-hint {
+  bottom: calc(40% - 18px);
+}
+
+.btn-reset-edit {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 0px 8px;
+  font-size: 0.75rem;
+  line-height: 0.9;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  backdrop-filter: blur(4px);
+  height: 25px;
+  margin-top: 3px;
+  box-sizing: border-box;
+  min-width: 44px;
+  text-align: center;
+}
+
+.btn-reset-edit:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+/* bd_civic1 — 50/50 */
+.textarea-wrapper.split-5050.mostrar-resposta .ta-pergunta { height: 40%; }
+.textarea-wrapper.split-5050 .ta-resposta               { height: 60%; }
+
+/* bd_civic2 — 60/40 */
+.textarea-wrapper.split-6040.mostrar-resposta .ta-pergunta { height: 60%; }
+.textarea-wrapper.split-6040 .ta-resposta               { height: 40%; }
+
+/* Botões PANel */
+.botao-pan {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 0;
+  margin: -16px auto;
+  box-sizing: border-box;
+}
+
+.botao-pan button {
+  background: none;
+  border: 1px solid #646cff;       /* ✅ mesmo estilo btn-search-nav */
+  border-radius: 4px;
+  color: #646cff;
+  cursor: pointer;
+  padding: 2px 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.botao-pan button:hover:not(:disabled) {
+  background-color: #646cff;
+  color: white;
+}
+
+.botao-pan button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Answer — destaque diferente */
+.btn-answer {
+  background-color: #646cff !important;
+  color: white !important;
+  font-weight: 600 !important;
+  min-width: 80px;
+}
+
+/* Next Q — verde */
+.btn-nextq {
+  background-color: #22c55e !important;
+  color: white !important;
+  border-color: #22c55e !important;
+  font-weight: 600 !important;
+  min-width: 80px;
+}
+
+/* botões de navegação */
+.botao-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 6px 0;
+  box-sizing: border-box;
+  margin: -21px auto -21px;
+}
+
+.botao-section button {
+  background: none;
+  border: 2px solid #898FFF;
+  border-radius: 4px;
+  color: #898FFF;
+  cursor: pointer;
+  padding: 1px 15px;
+  font-size: 1rem;
+  line-height: 1.2;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.botao-section button:hover:not(:disabled) {
+  background-color: #646cff;
+  color: white;
+}
+
+.botao-section button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.checkbox-col {
+  display: flex;
+  flex-direction: column;   /* ✅ empilha verticalmente */
+  align-items: flex-start;
+  gap: 0px;
+  margin-left: 40px;
+}
+
+.checkbox-resposta {
+  font-size: 0.75rem;
+  color: #555;
+  cursor: pointer;
+  user-select: none;
+  margin-left: 4px;
+}
+
+.checkbox-resposta input {
+  cursor: pointer;
+  accent-color: #646cff;
+}
+
+.section-divider {
+  width: 100%;
+  height: 1px;
+  background-color: #e0e0e0;
+  border: none;
+  margin: -15px auto 25px;
+}
+
+.bottom-level-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.bottom-level-filter select {
+  width: auto;
+  min-width: 90px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.btn-start-test {
+  font-size: 0.8rem;
+  padding: 4px 14px;
+  border-radius: 8px;
+  border: 1px solid #646cff;
+  color: #646cff;
+  background: none;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  margin: -35px auto -15px;
+}
+
+.btn-start-test:hover {
+  background: #646cff;
+  color: white;
+}
+
+/* Ajusta o Level selector para ficar alinhado */
+.level-selector {
+  margin-left: auto;
+  padding-left: 15px;
+  border-left: 1px inset lightgrey;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #555;
+}
+
+.level-selector select {
+  width: auto !important;      /* ✅ Força a largura automática para ignorar o global */
+  min-width: 80px;             /* ✅ Impede que fique pequeno demais */
+  margin-left: auto;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  margin: 0;                   /* Remove margem herdada */
+}
+.select-easy {
+  background-color: #dcfce7;
+  color: #16a34a;
+  border-color: #bbf7d0 !important;
+}
+
+.select-medium {
+  background-color: #fef9c3;
+  color: #ca8a04;
+  border-color: #fef08a !important;
+}
+
+.select-hard {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca !important;
+}
+
+/* ── SPEECH BUTTONS ─── */
+.speech-btns {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: -25px 0px 0px 0px;  /* ✅ remove o -15px da esquerda */
+}
+
+.select-voice {
+  width: auto !important;
+  min-width: 130px;
+  max-width: 180px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.72rem;
+  cursor: pointer;
+  background: white;
+  margin: 0 auto 0 0 !important;
+}
+
+.btn-speech {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 0px 8px;        /* ✅ era 2px, reduz altura */
+  font-size: 0.75rem;      /* ✅ era 0.75rem, reduz um pouco */
+  line-height: 0.9;        /* ✅ controla altura interna */
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  backdrop-filter: blur(4px);
+  height: 25px;
+  margin-top: 3px;
+  box-sizing: border-box;   /* ✅ garante que border não altera largura */
+  min-width: 44px;          /* ✅ largura fixa — não muda entre estados */
+  text-align: center;  
+}
+
+.btn-speech:hover {
+  background: #646cff;
+  color: white;
+  border-color: #646cff;
+}
+
+.btn-speech-active {
+  background: #646cff;
+  color: white;
+  border-color: #646cff;
+  min-width: 50px;
+}
+
+@media (max-width: 1024px) {
+  #center {
+    padding: 16px 16px;
+    gap: 18px;
+  }
+}
+
+@media (max-width: 425px) {
+   #center {
+    width: calc(100% - 24px);   /* ✅ menos margem lateral em telas pequenas */
+    padding: 16px;
+    border: none;         /* ✅ remove borda em telas pequenas */
+    border-radius: 0;     /* ✅ remove arredondamento junto */
+    box-shadow: none;     /* ✅ opcional — remove sombra também */
+  }
+  
+  .level-selector {
+    margin-left: 8px;
+    padding-left: 6px;
+    border-left: none;
+  }
+
+  .level-selector label {
+    display: none;
+  }
+
+  .btn-arrow {
+    display: none;
+  }
+  .botao-section{
+    gap: 6px;
+  }
+  .checkbox-col{
+    margin-left: 0px;
+  }
+  .search-container{
+    border: none;         /* ✅ remove borda em telas pequenas */
+    border-radius: 0;     /* ✅ remove arredondamento junto */
+    box-shadow: none;     /* ✅ opcional — remove sombra também */    
+  }
+}

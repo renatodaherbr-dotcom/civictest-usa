@@ -1,0 +1,481 @@
+import { useState, useEffect, useMemo, useRef } from 'react'
+import Papa from "papaparse"
+import './app.css'
+import { useSearch } from "./hooks/useSearch"
+import { SearchUI } from "./components/SearchUI"
+import { useTest } from "./hooks/useTest"
+import { TestUI } from "./components/TestUI"
+import { useLevels } from "./hooks/useLevels" // ✅ IMPORTA O HOOK AQUI
+import { useSpeech } from "./hooks/useSpeech"
+import { useTippy } from  "./hooks/useTips"
+import { HamburgerMenu } from "./components/HamburgerMenu"
+import { useEdits } from "./hooks/useEdits"
+
+function App() {
+  const [dbFile, setDbFile] = useState("bd_civic2.csv")
+  const [opc_s, setOpcao_s] = useState("0")
+  const [opc_ss, setOpcao_ss] = useState("0")
+  const [dados, setDados] = useState([])
+  const [index, setIndex] = useState(0)
+  const [mostrarResposta, setMostrarResposta] = useState(false)
+  const [levelFilter, setLevelFilter] = useState("all")
+  const { updateLevel, getLevel } = useLevels()
+  const intervalRef = useRef(null)
+  const timeoutRef  = useRef(null)
+  const {
+    speak, speakQueued, stop, speaking, speakingId, supported,
+    voices, selectedVoice, setSelectedVoice,
+  } = useSpeech()
+  const [autoVoice, setAutoVoice] = useState(false)
+  const mountedRef = useRef(false)
+  const { getEdit, saveEdit, clearEdit } = useEdits()
+
+  // carregar CSV
+  useEffect(() => {
+    fetch(`/${dbFile}`)
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status} — ${dbFile} not found`)
+        return r.text()
+      })
+      .then(csvText => {
+        const results = Papa.parse(csvText, {
+          header: true,
+          delimiter: ";",
+        })
+        const linhasValidas = results.data.filter(d => d.question && d.answer)
+        const comIds = linhasValidas.map((item, i) => ({
+          ...item,
+          globalId: String(i + 1)
+        }))
+        setDados(comIds)
+      })
+      .catch(err => console.error("CSV load error:", err))
+  }, [dbFile])
+
+  const handleDbChange = (file) => {
+    setDbFile(file)
+    setOpcao_s("0")
+    setOpcao_ss("0")
+    setIndex(0)
+    setMostrarResposta(false)
+    setLevelFilter("all")
+    stop()
+  }  
+
+  // ✅ 1st filter — section + subsection
+  const perguntasFiltradas = useMemo(() =>
+    dados.filter(
+      d => (opc_s === "0" || d.section === opc_s) &&
+           (opc_ss === "0" || d.sub_section === opc_ss)
+    ),
+    [dados, opc_s, opc_ss]
+  )
+
+  // ✅ 2nd filter — level on top of the first
+  const perguntasVisiveis = useMemo(() => {
+    if (levelFilter === "all") return perguntasFiltradas
+    return perguntasFiltradas.filter(q => getLevel(q.id_number) === levelFilter)
+  }, [perguntasFiltradas, levelFilter, getLevel])  // ← ) aqui!
+
+  const indexAtual = perguntasVisiveis.length > 0
+    ? Math.min(index, perguntasVisiveis.length - 1)
+    : 0
+
+  const perguntaAtual = perguntasVisiveis[indexAtual]
+
+  // ✅ questionId declarado antes de ser usado em texto_a
+  const questionId = perguntaAtual?.id_number || ""
+
+  const texto_q = perguntaAtual?.question ?? ""
+  const texto_a_original = perguntaAtual?.answer ?? ""
+  const texto_a = getEdit(questionId) ?? texto_a_original  // ✅ sem erro
+
+  // Funções de navegação
+  const primeira = () => setIndex(0)
+  const ultima = () => setIndex(perguntasVisiveis.length - 1)
+  const proxima = () => setIndex(prev => Math.min(prev + 1, perguntasVisiveis.length - 1))
+  const anterior = () => setIndex(prev => Math.max(prev - 1, 0))
+
+  // Versões que resetam a resposta ao navegar
+  const proximaComReset = () => { proxima(); setMostrarResposta(false) }
+  const anteriorComReset = () => { anterior(); setMostrarResposta(false) }
+
+  const search = useSearch(perguntasVisiveis, setIndex)
+
+  const handleAnswer = () => {
+    if (!mostrarResposta) {
+      setMostrarResposta(true)
+      // Browser já gerencia fila — não precisa waitForQ
+    } else {
+      proximaComReset()
+    }
+  }
+  
+  // Reset index ao mudar seleção
+  const handleSectionChange = (s) => {
+    setOpcao_s(s)
+    setOpcao_ss("0")
+    setIndex(0)
+    setMostrarResposta(false)
+  }
+
+  const handleSubSectionChange = (ss) => {
+    setOpcao_ss(ss)
+    setIndex(0)
+    setMostrarResposta(false)
+  }
+
+  const startAuto = (fn) => {
+    if (intervalRef.current || timeoutRef.current) return  // já rodando
+
+    // delay inicial
+    timeoutRef.current = setTimeout(() => {
+      intervalRef.current = setInterval(fn, 200)
+      timeoutRef.current = null
+    }, 400)
+  }
+
+  // Para quando soltar ou sair do botão
+  const stopAuto = () => {
+    clearTimeout(timeoutRef.current);  timeoutRef.current  = null
+    clearInterval(intervalRef.current); intervalRef.current = null
+  }
+
+  // Dados para uso no test
+  const test = useTest()
+
+  // Obtenha o nível atual do hook
+  const currentLevel = questionId ? getLevel(questionId) : "easy"
+
+  // Effect 1 — só dispara quando MUDA DE PERGUNTA → fala Q
+  useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true
+      return
+    }
+    if (test.testActive) return
+    if (autoVoice && texto_q) {
+      stop()
+      speak(texto_q, "q")
+    }
+  }, [autoVoice, texto_q])   // ← sem mostrarResposta aqui!
+
+  // Effect 2 — só dispara quando ANSWER é revelado → enfileira A
+  useEffect(() => {
+    if (!mostrarResposta) return
+    if (test.testActive) return
+    if (autoVoice && texto_a) {
+      speakQueued(texto_a, "a")  // ← não cancela Q!
+    }
+  }, [mostrarResposta, autoVoice, texto_a])
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.key === "f") {
+        e.preventDefault()          // blocks browser's native Ctrl+F
+        search.setSearchOpen(true)
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [search])  
+
+  const tipPrev = useTippy("Previous question")
+  const tipAnswer = useTippy(
+    mostrarResposta ? "Go to next question" : "Show the answer"
+  )  
+  const tipSkip = useTippy("Skip to next question")
+  const tipQ = useTippy("Read question aloud.")
+  const tipA = useTippy("Read answer aloud")
+  const tipLevel = useTippy("Choose level of question.")
+  const tipPdf = useTippy("Open Civic Test Study Guide.")
+
+  const exportEdits = async () => {
+    // Pega todas as chaves relevantes do app
+    const data = {
+      civic_edits:  JSON.parse(localStorage.getItem("civic_edits")  ?? "{}"),
+      civic_levels: JSON.parse(localStorage.getItem("civic_levels") ?? "{}"),
+    }
+    const json = JSON.stringify(data, null, 2)
+
+    if (window.showSaveFilePicker) {
+      try {
+        const fileHandle = await window.showSaveFilePicker({
+          suggestedName: `civic_backup_${new Date().toISOString().slice(0, 10)}.json`,
+          types: [{ description: "JSON file", accept: { "application/json": [".json"] } }],
+        })
+        const writable = await fileHandle.createWritable()
+        await writable.write(json)
+        await writable.close()
+      } catch (err) {
+        if (err.name !== "AbortError") console.error("Export error:", err)
+      }
+    } else {
+      const blob = new Blob([json], { type: "application/json" })
+      const a = document.createElement("a")
+      a.href = URL.createObjectURL(blob)
+      a.download = `civic_backup_${new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+    }
+  }
+
+  const importEdits = (file) => {
+    if (!file) return
+
+    // ✅ Confirmação antes de sobrescrever
+    if (!confirm("This will overwrite your current edits and levels. Continue?")) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result)
+        if (data.civic_edits !== undefined || data.civic_levels !== undefined) {
+          if (data.civic_edits)  localStorage.setItem("civic_edits",  JSON.stringify(data.civic_edits))
+          if (data.civic_levels) localStorage.setItem("civic_levels", JSON.stringify(data.civic_levels))
+        } else {
+          localStorage.setItem("civic_edits", JSON.stringify(data))
+        }
+        window.location.reload()
+      } catch (err) {
+        console.error("Import error:", err)
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  return (
+    <>
+      <section id="center">
+        {/* ← Hamburger — fica no canto superior direito do card */}
+        <HamburgerMenu
+          dbFile={dbFile}
+          onDbChange={handleDbChange}
+          onExportEdits={exportEdits}
+          onImportEdits={importEdits}
+          levelFilter={levelFilter}
+          onLevelChange={(val) => {
+            setLevelFilter(val)
+            setIndex(0)
+            setMostrarResposta(false)
+          }}
+          voices={voices}
+          selectedVoice={selectedVoice}
+          onVoiceChange={setSelectedVoice}
+        />
+        <div><h3>Civic Test USCIS 2026</h3></div>      
+
+        {/* SELECTORS */}
+        {/* DATABASE SELECTOR */}
+        <div className="db-row">
+          <select
+            value={opc_s}
+            onChange={(e) => handleSectionChange(e.target.value)}>
+            <option value="0">All Sections</option>
+            {[...new Set(dados.map(d => d.section))].map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+
+          <select
+            value={opc_ss}
+            onChange={(e) => handleSubSectionChange(e.target.value)}>
+            <option value="0">All Subsections</option>
+            {dados
+              .filter(d => d.section === opc_s)
+              .map(d => d.sub_section)
+              .filter((v, i, arr) => arr.indexOf(v) === i)
+              .map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+          </select>
+        </div>
+
+        {/* BARRA DE STATUS + COMBOBOX LEVEL */}
+
+        {/* LABEL STATUS */}
+        <div className="label-status">
+          {perguntaAtual 
+            ? `Sec ${perguntaAtual.section.split('.')[0]}, Subsec ${perguntaAtual.sub_section.split('.')[0]}`
+            : "Nenhuma Sec/Subsec"} 
+          {" "}—{" "}
+          <strong>
+          {perguntasVisiveis.length > 0
+            ? `Pergunta ${indexAtual + 1} de ${perguntasVisiveis.length}`
+            : "Nenhuma pergunta"}
+          </strong>
+        </div>
+
+        {/* BOTÕES PREV / ANSWER / NEXT */}
+        <div className="botao-pan">
+          <button
+            ref={tipPrev}
+            className="btn-prev"
+            onClick={anteriorComReset}
+            disabled={indexAtual === 0}>
+            <span className="btn-arrow">← </span>Prev
+          </button>
+
+          <button
+            ref={tipAnswer}
+            className={mostrarResposta ? "btn-nextq" : "btn-answer"}
+            onClick={handleAnswer}
+            disabled={mostrarResposta && indexAtual >= perguntasVisiveis.length - 1}>
+            {mostrarResposta ? "Next Q" : "Answer"}
+          </button>
+
+          <button
+            ref={tipSkip}
+            className="btn-next"
+            onClick={proximaComReset}
+            disabled={indexAtual >= perguntasVisiveis.length - 1}>
+            Skip<span className="btn-arrow"> →</span>
+          </button>
+
+          {/* COMBOBOX DE DIFICULDADE */}
+          {questionId && (
+            <div className="level-selector">
+              <label htmlFor="difficulty-select" ref={tipLevel}>Level: </label>
+              <select 
+                ref={tipLevel}
+                id="difficulty-select"
+                value={currentLevel}
+                onChange={(e) => updateLevel(questionId, e.target.value)}
+                className={`select-diff select-${currentLevel}`}>
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* TEXT AREA */}
+        <div className={`textarea-wrapper ${mostrarResposta ? "mostrar-resposta" : ""} ${dbFile === "bd_civic3.csv" ? "split-6040" : "split-5050"}`}>
+          <textarea
+            className="ta-pergunta"
+            value={texto_q}
+            readOnly
+          />          
+          <textarea
+            className={`ta-resposta ${!mostrarResposta ? "ta-hidden" : ""} ${getEdit(questionId) ? "ta-edited" : ""}`}
+            value={texto_a}
+            readOnly={!mostrarResposta}
+            tabIndex={mostrarResposta ? 0 : -1}
+            onChange={(e) => saveEdit(questionId, e.target.value)}
+          />
+          {/* ✏️ indicador — só aparece quando resposta está visível */}
+          {mostrarResposta && (
+            <span className="ta-editable-hint">✏️ editable</span>
+          )}          
+        </div>
+        
+        {/* ✅ BOTÕES DE VOZ — novos */}
+        {supported && (
+          <div className="speech-btns">
+
+            {/* Grupo Q + A — esquerda */}
+            <div style={{ display: "flex", gap: "6px" }}>
+              <button
+                ref={tipQ}
+                className={`btn-speech ${speakingId === "q" ? "btn-speech-active" : ""}`}
+                onClick={() => speakingId === "q" ? stop() : speak(texto_q, "q")}
+              >
+                {speakingId === "q" ? "⏹ Q" : "🔊 Q"}
+              </button>
+
+              {mostrarResposta && (
+                <button
+                  ref={tipA}
+                  className={`btn-speech ${speakingId === "a" ? "btn-speech-active" : ""}`}
+                  onClick={() => speakingId === "a" ? stop() : speak(texto_a, "a")}
+                >
+                  {speakingId === "a" ? "⏹ A" : "🔊 A"}
+                </button>
+              )}
+            </div>
+
+            {/* Reset — direita */}
+            {mostrarResposta && getEdit(questionId) && (
+              <button
+                className="btn-reset-edit"
+                title="Restaurar resposta original"
+                onClick={() => clearEdit(questionId)}
+                style={{ marginLeft: "auto" }}
+              >
+                ↩ Reset
+              </button>
+            )}
+
+          </div>
+        )}
+
+        {/* BOTÕES DE NAVEGAÇÃO */}
+        <div className="botao-section">
+          <button onClick={primeira} disabled={indexAtual === 0}>«</button>
+          <button 
+            onClick={anterior} disabled={indexAtual === 0}
+            onMouseDown={() => startAuto(anterior)}
+            onMouseUp={stopAuto}
+            onMouseLeave={stopAuto}
+          >‹</button>
+          <button onClick={proxima} 
+            disabled={indexAtual >= perguntasVisiveis.length - 1}
+            onMouseDown={() => startAuto(proxima)}
+            onMouseUp={stopAuto}
+            onMouseLeave={stopAuto}
+          >›</button>
+          <button onClick={ultima} 
+            disabled={indexAtual >= perguntasVisiveis.length - 1}>»</button>
+
+          {/* CHECKBOX MOSTRAR RESPOSTA */}
+          <div className="checkbox-col">
+            <label className="checkbox-resposta">
+              <input
+                type="checkbox"
+                checked={mostrarResposta}
+                onChange={(e) => setMostrarResposta(e.target.checked)}
+              />
+              {" "}Show Answer
+            </label>
+
+            {supported && (
+              <label className="checkbox-resposta">
+                <input
+                  type="checkbox"
+                  checked={autoVoice}
+                  onChange={(e) => {
+                    setAutoVoice(e.target.checked)
+                    if (!e.target.checked) stop()
+                  }}
+                />
+                {" "}🔊 Play voices
+              </label>
+            )}
+          </div>
+
+        </div>
+
+        <SearchUI 
+          {...search}
+          onStartTest={test.startTest}
+        />
+        <TestUI
+          {...test}
+          speak={speak}
+          stop={stop}
+          speakingId={speakingId}
+          supported={supported}
+          selectedVoice={selectedVoice}
+          autoVoice={autoVoice}      
+          setAutoVoice={setAutoVoice}
+        />
+
+      </section>
+
+      <section id="spacer"></section>
+      {/* <DebugDbFiles /> */}
+    </>
+  )
+}
+
+export default App
