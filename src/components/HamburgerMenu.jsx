@@ -74,7 +74,8 @@ function IconDatabase() {
 export function HamburgerMenu({
   dbFile, onDbChange,
   onExportEdits, onImportEdits,
-  levelFilter, onLevelChange, voices, selectedVoice, onVoiceChange
+  levelFilter, onLevelChange, voices, selectedVoice, onVoiceChange,
+  timerQ, onTimerQ, timerA, onTimerA,
 }) {
 
   const fileInputRef = useRef(null)
@@ -93,6 +94,17 @@ export function HamburgerMenu({
     }
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    const saved = localStorage.getItem("civic_fs")
+    if (saved) document.documentElement.style.setProperty('--fs', saved)
+    
+    const savedQ = localStorage.getItem("civic_timerQ")
+    if (savedQ) onTimerQ(Number(savedQ))
+
+    const savedA = localStorage.getItem("civic_timerA")
+    if (savedA) onTimerA(Number(savedA))          
   }, [])
 
   return (
@@ -118,6 +130,59 @@ export function HamburgerMenu({
 
       {open && (
         <div className="hamburger-dropdown">
+          {/* ── FONT SIZE ── */}
+          <div className="hm-item hm-item--select">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+              <span className="hm-label" style={{ margin: 0 }}>Text size</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "0.8rem", color: "#555" }}>Aa</span>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button
+                    className="btn-font"
+                    onClick={() => {
+                      const cur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs')) || 0.85
+                      const next = `${Math.max(0.7, cur - 0.05).toFixed(2)}rem`
+                      document.documentElement.style.setProperty('--fs', `${Math.max(0.7, cur - 0.05).toFixed(2)}rem`)
+                      localStorage.setItem("civic_fs", next)  
+                    }}>−</button>
+                  <button
+                    className="btn-font"
+                    onClick={() => {
+                      const cur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs')) || 0.85
+                      const next = `${Math.min(1.2, cur + 0.05).toFixed(2)}rem`
+                      document.documentElement.style.setProperty('--fs', `${Math.min(1.2, cur + 0.05).toFixed(2)}rem`)
+                      localStorage.setItem("civic_fs", next)
+                    }}>+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── AUTO TIMER ── */}
+          <div className="hm-item hm-item--select">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+              <span className="hm-label" style={{ margin: 0 }}>Auto timer</span>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <label className="timer-label">Q
+                  <input className="timer-input" type="number" min="1" max="60"
+                    value={timerQ} 
+                    onChange={(e) => {
+                      onTimerQ(Number(e.target.value))
+                      localStorage.setItem("civic_timerQ", e.target.value)
+                      }} />s
+                </label>
+                <label className="timer-label">A
+                  <input className="timer-input" type="number" min="1" max="60"
+                    value={timerA} 
+                    onChange={(e) => {
+                      onTimerA(Number(e.target.value))
+                      localStorage.setItem("civic_timerA", e.target.value)
+                    }} />s
+                </label>
+              </div>
+            </div>
+          </div>    
+          
           {/* ── LEVEL FILTER — acima do Database ── */}
           <div className="hm-item hm-item--select">
             <span className="hm-label">Level filter</span>
@@ -145,7 +210,10 @@ export function HamburgerMenu({
                 <select
                   className="hm-select"
                   value={selectedVoice}
-                  onChange={(e) => onVoiceChange(e.target.value)}
+                  onChange={(e) => {
+                    onVoiceChange(e.target.value)
+                    setOpen(false)
+                  }}  
                 >
                   <option value="">Default voice</option>
                   {voices.map(v => (
@@ -157,7 +225,6 @@ export function HamburgerMenu({
               </div>
             </>
           )}
-
 
           <div className="hm-item hm-item--select">
             <div className="hm-item-head">
@@ -177,34 +244,6 @@ export function HamburgerMenu({
               <option value="bd_civic3.csv">⚡ Civic 2026 — Short answers</option>
             </select>
           </div>
-
-          <div className="hm-divider" />
-
-          <a
-            className="hm-item hm-item--link"
-            href="/USCIS-2025-Civics-Test-Study-Guide.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
-          >
-            <span className="hm-icon"><IconFile /></span>
-            <span>Study Guide PDF</span>
-          </a>
-
-          <div className="hm-divider" />
-
-          <a
-            className="hm-item hm-item--link"
-            href="https://www.uscis.gov/citizenship"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
-          >
-            <span className="hm-icon"><IconGlobe /></span>
-            <span>USCIS Citizenship</span>
-          </a>
-
-          <div className="hm-divider" />
 
           {/* Edits backup/restore */}
           <div className="hm-item hm-item--select">
@@ -232,7 +271,31 @@ export function HamburgerMenu({
               style={{ display: "none" }}
               onChange={(e) => { onImportEdits(e.target.files[0]); setOpen(false) }}
             />
-          </div>
+          </div>          
+          
+          <div className="hm-divider" />
+
+          <a
+            className="hm-item hm-item--link"
+            href="/USCIS-2025-Civics-Test-Study-Guide.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+          >
+            <span className="hm-icon"><IconFile /></span>
+            <span>Study Guide PDF</span>
+          </a>
+
+          <a
+            className="hm-item hm-item--link"
+            href="https://www.uscis.gov/citizenship"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+          >
+            <span className="hm-icon"><IconGlobe /></span>
+            <span>USCIS Citizenship</span>
+          </a>
 
         </div>
       )}

@@ -28,9 +28,11 @@ export function useSpeech() {
       setVoices(availableVoices)
       voicesRef.current = availableVoices         // ← atualiza ref direto também
       if (availableVoices.length > 0 && !selectedVoiceRef.current) {
-        const name = availableVoices[0]?.name || ''
+        const saved = localStorage.getItem("civic_voice")
+        const match = saved && availableVoices.find(v => v.name === saved)
+        const name = match ? saved : (availableVoices[0]?.name || '')
         setSelectedVoice(name)
-        selectedVoiceRef.current = name           // ← sincroniza ref
+        selectedVoiceRef.current = name
       }
     }
 

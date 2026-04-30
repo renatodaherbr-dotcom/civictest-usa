@@ -28,7 +28,7 @@ section#center textarea {
   width: calc(100% - 16px); /* ocupa toda a largura menos margens laterais */
   margin: 5px 5px;          /* 4px topo/baixo, 8px laterais */
   padding: 8px;             /* espaço interno */
-  font-size: 0.8rem;
+  font-size: var(--fs);
   border-radius: 6px;
   border: 1px solid #ccc;
   resize: vertical;         /* usuário só pode mudar altura */
@@ -48,9 +48,9 @@ section#center textarea {
 
 /* Ajusta o label-status para não ter margens grandes e manter o tamanho */
 .label-status {
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   color: #555;
-  margin: 0; /* Remove o margin: -20px 0 10px antigo */
+  margin: -20px 0 10px;
   text-align: right; /* Alinha o texto à direita */
 }
 
@@ -126,6 +126,23 @@ section#center textarea {
   pointer-events: none;
 }
 
+.ta-q-index {
+  position: absolute;
+  top: 1px;
+  right: 6px;
+  font-size: 0.65rem;
+  font-weight: 1000;
+  color: rgb(238 0 0 / 94%);
+  pointer-events: none;
+  z-index: 2;
+  line-height: 1;
+  user-select: none;
+  border: darkgray 1px solid;
+  padding: 4px;
+  border-radius: 16px;
+  background-color: white;
+  min-width: 20px;
+}
 .mostrar-resposta .ta-pergunta {
   height: 40%;        /* ✅ cede 40% para a resposta */
   background-color: #C5E0B4;
@@ -233,9 +250,9 @@ section#center textarea {
   color: #646cff;
   cursor: pointer;
   padding: 2px 10px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  line-height: 1.4;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.6;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
@@ -346,21 +363,25 @@ section#center textarea {
   border: 1px solid #ccc;
 }
 
+/* Start Test button */
 .btn-start-test {
   font-size: 0.8rem;
-  padding: 4px 14px;
-  border-radius: 8px;
-  border: 1px solid #646cff;
-  color: #646cff;
-  background: none;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-  margin: -35px auto -15px;
-}
-
-.btn-start-test:hover {
-  background: #646cff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
   color: white;
+  background: #646cff;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(100, 108, 255, 0.4);
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+.btn-start-test:hover {
+  background: #4e56d6;
+  box-shadow: 0 4px 10px rgba(100, 108, 255, 0.5);
+}
+.btn-start-test:active {
+  transform: scale(0.97);
 }
 
 /* Ajusta o Level selector para ficar alinhado */
@@ -501,3 +522,83 @@ section#center textarea {
     box-shadow: none;     /* ✅ opcional — remove sombra também */    
   }
 }
+
+.btn-font {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #d8dbea;
+  border-radius: 6px;
+  background: #f8f9fd;
+  color: #3c4054;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.14s, border-color 0.14s;
+}
+.btn-font:hover {
+  background: #646cff;
+  color: white;
+  border-color: #646cff;
+}
+
+.auto-timer-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;    /* ← pushes to far right */
+}
+
+.btn-auto-timer {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1.5px solid #646cff;
+  background: none;
+  color: #646cff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-auto-timer:hover       { background: #646cff; color: white; }
+.btn-auto-timer--on         { background: #ef4444; border-color: #ef4444; color: white; }
+.btn-auto-timer--on:hover   { background: #c53030; border-color: #c53030; }
+
+.timer-label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  color: #555;
+}
+
+.timer-input {
+  width: 36px;
+  height: 24px;
+  padding: 0 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.btn-repeat {
+  height: 26px;
+  min-width: 28px;
+  padding: 0 6px;
+  border: 0.1px solid #f1f1f1;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.85);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.btn-repeat:hover {
+  border-color: #646cff;
+  background: #eeeffe;
+  border: 1.5px solid #898989;
+}
+.btn-repeat:active { transform: scale(0.95); }

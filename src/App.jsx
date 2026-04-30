@@ -12,13 +12,17 @@ import { HamburgerMenu } from "./components/HamburgerMenu"
 import { useEdits } from "./hooks/useEdits"
 
 function App() {
-  const [dbFile, setDbFile] = useState("bd_civic2.csv")
+  const [dbFile, setDbFile] = useState(
+    () => localStorage.getItem("civic_db") || "bd_civic2.csv"   // ← ADD
+  )
+  const [levelFilter, setLevelFilter] = useState(
+    () => localStorage.getItem("civic_level") || "all"           // ← ADD
+  )
   const [opc_s, setOpcao_s] = useState("0")
   const [opc_ss, setOpcao_ss] = useState("0")
   const [dados, setDados] = useState([])
   const [index, setIndex] = useState(0)
   const [mostrarResposta, setMostrarResposta] = useState(false)
-  const [levelFilter, setLevelFilter] = useState("all")
   const { updateLevel, getLevel } = useLevels()
   const intervalRef = useRef(null)
   const timeoutRef  = useRef(null)
@@ -27,9 +31,22 @@ function App() {
     voices, selectedVoice, setSelectedVoice,
   } = useSpeech()
   const [autoVoice, setAutoVoice] = useState(false)
+
+  const [autoTimer, setAutoTimer]   = useState(false)
+  const [timerQ, setTimerQ] = useState(() => Number(localStorage.getItem("civic_timerQ")) || 5)
+  const [timerA, setTimerA] = useState(() => Number(localStorage.getItem("civic_timerA")) || 5)
+  const isRepeatingRef = useRef(false)
+  const [timerTick, setTimerTick] = useState(0)
+  
   const mountedRef = useRef(false)
   const { getEdit, saveEdit, clearEdit } = useEdits()
-
+  useEffect(() => { localStorage.setItem("civic_db", dbFile) }, [dbFile])
+  useEffect(() => { localStorage.setItem("civic_level", levelFilter) }, [levelFilter])
+  // ← ADD — persist voice (only when selected)
+  useEffect(() => {
+    if (selectedVoice) localStorage.setItem("civic_voice", selectedVoice)
+  }, [selectedVoice])
+ 
   // carregar CSV
   useEffect(() => {
     fetch(`/${dbFile}`)
@@ -97,10 +114,16 @@ function App() {
   const anterior = () => setIndex(prev => Math.max(prev - 1, 0))
 
   // Versões que resetam a resposta ao navegar
-  const proximaComReset = () => { proxima(); setMostrarResposta(false) }
-  const anteriorComReset = () => { anterior(); setMostrarResposta(false) }
+  const proximaComReset = () => {
+    proxima()
+    setMostrarResposta(false)
+  }
+  const anteriorComReset = () => {
+    anterior()
+    setMostrarResposta(false)   // effect re-fires automatically for new index
+  }
 
-  const search = useSearch(perguntasVisiveis, setIndex)
+  const search = useSearch(perguntasVisiveis, setIndex, getEdit)
 
   const handleAnswer = () => {
     if (!mostrarResposta) {
@@ -178,7 +201,30 @@ function App() {
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [search])  
+  }, [search])
+  
+  useEffect(() => {
+    if (!autoTimer) return
+    if (speaking) return
+    if (isRepeatingRef.current) return
+
+    const isLast = indexAtual >= perguntasVisiveis.length - 1
+
+    if (!mostrarResposta) {
+      // Q audio finished → start Q wait
+      const t = setTimeout(() => {
+        setMostrarResposta(true)
+      }, timerQ * 1000)
+      return () => clearTimeout(t)
+    } else {
+      // A audio finished → start A wait
+      if (isLast) { setAutoTimer(false); return }
+      const t = setTimeout(() => {
+        proximaComReset()
+      }, timerA * 1000)
+      return () => clearTimeout(t)
+    }
+  }, [autoTimer, indexAtual, mostrarResposta, timerQ, timerA, speaking, timerTick])
 
   const tipPrev = useTippy("Previous question")
   const tipAnswer = useTippy(
@@ -189,12 +235,20 @@ function App() {
   const tipA = useTippy("Read answer aloud")
   const tipLevel = useTippy("Choose level of question.")
   const tipPdf = useTippy("Open Civic Test Study Guide.")
+  const tipRepeat = useTippy("Repeat question / answer aloud")
+  const tipAuto   = useTippy("Auto-advance with timer")
 
   const exportEdits = async () => {
     // Pega todas as chaves relevantes do app
     const data = {
       civic_edits:  JSON.parse(localStorage.getItem("civic_edits")  ?? "{}"),
       civic_levels: JSON.parse(localStorage.getItem("civic_levels") ?? "{}"),
+      civic_db:     localStorage.getItem("civic_db")    || "bd_civic2.csv",  // ← ADD
+      civic_level:  localStorage.getItem("civic_level") || "all",            // ← ADD
+      civic_fs:     localStorage.getItem("civic_fs")    || "0.85rem",        // ← ADD
+      civic_voice:  localStorage.getItem("civic_voice") || "",
+      civic_timerQ:  localStorage.getItem("civic_timerQ")  || "5",   // ← ADD
+      civic_timerA:  localStorage.getItem("civic_timerA")  || "5",   // ← ADD      
     }
     const json = JSON.stringify(data, null, 2)
 
@@ -232,6 +286,12 @@ function App() {
         if (data.civic_edits !== undefined || data.civic_levels !== undefined) {
           if (data.civic_edits)  localStorage.setItem("civic_edits",  JSON.stringify(data.civic_edits))
           if (data.civic_levels) localStorage.setItem("civic_levels", JSON.stringify(data.civic_levels))
+          if (data.civic_db)     localStorage.setItem("civic_db",     data.civic_db)     // ← ADD
+          if (data.civic_level)  localStorage.setItem("civic_level",  data.civic_level)  // ← ADD
+          if (data.civic_fs)     localStorage.setItem("civic_fs",     data.civic_fs)     // ← ADD
+          if (data.civic_voice)  localStorage.setItem("civic_voice",  data.civic_voice)
+          if (data.civic_timerQ) localStorage.setItem("civic_timerQ", data.civic_timerQ) // ← ADD
+          if (data.civic_timerA) localStorage.setItem("civic_timerA", data.civic_timerA) // ← ADD
         } else {
           localStorage.setItem("civic_edits", JSON.stringify(data))
         }
@@ -242,6 +302,7 @@ function App() {
     }
     reader.readAsText(file)
   }
+
 
   return (
     <>
@@ -261,6 +322,8 @@ function App() {
           voices={voices}
           selectedVoice={selectedVoice}
           onVoiceChange={setSelectedVoice}
+          timerQ={timerQ} onTimerQ={setTimerQ}   // ← ADD
+          timerA={timerA} onTimerA={setTimerA}   // ← ADD          
         />
         <div><h3>Civic Test USCIS 2026</h3></div>      
 
@@ -351,6 +414,7 @@ function App() {
 
         {/* TEXT AREA */}
         <div className={`textarea-wrapper ${mostrarResposta ? "mostrar-resposta" : ""} ${dbFile === "bd_civic3.csv" ? "split-6040" : "split-5050"}`}>
+          <span className="ta-q-index">{questionId}</span>
           <textarea
             className="ta-pergunta"
             value={texto_q}
@@ -369,11 +433,10 @@ function App() {
           )}          
         </div>
         
-        {/* ✅ BOTÕES DE VOZ — novos */}
         {supported && (
           <div className="speech-btns">
 
-            {/* Grupo Q + A — esquerda */}
+            {/* LEFT — Q / A voice buttons */}
             <div style={{ display: "flex", gap: "6px" }}>
               <button
                 ref={tipQ}
@@ -394,17 +457,75 @@ function App() {
               )}
             </div>
 
-            {/* Reset — direita */}
+            {/* Reset edit — only when needed */}
             {mostrarResposta && getEdit(questionId) && (
               <button
                 className="btn-reset-edit"
-                title="Restaurar resposta original"
                 onClick={() => clearEdit(questionId)}
-                style={{ marginLeft: "auto" }}
+                style={{ marginLeft: "4px" }}
               >
                 ↩ Reset
               </button>
             )}
+
+            {/* RIGHT — Auto timer controls */}
+            <div className="auto-timer-row">
+              {/* ← REPEAT button */}
+              <button
+                className="btn-repeat"
+                ref={tipRepeat}
+                onClick={() => {
+                  stop()
+                  if (mostrarResposta) {
+                    isRepeatingRef.current = true        // ← block timer
+                    speak(texto_q, "q")
+                    const checkDone = setInterval(() => {
+                      if (!window.speechSynthesis.speaking) {
+                        clearInterval(checkDone)
+                        setTimeout(() => {
+                          speakQueued(texto_a, "a")
+                          // Clear block after A finishes
+                          const checkA = setInterval(() => {
+                            if (!window.speechSynthesis.speaking) {
+                              clearInterval(checkA)
+                              isRepeatingRef.current = false   // ← unblock timer
+                              setTimerTick(t => t + 1)
+                            }
+                          }, 200)
+                        }, 2000)
+                      }
+                    }, 200)
+                  } else {
+                    isRepeatingRef.current = true        // ← block timer
+                    speak(texto_q, "q")
+                    const checkDone = setInterval(() => {
+                      if (!window.speechSynthesis.speaking) {
+                        clearInterval(checkDone)
+                        isRepeatingRef.current = false   // ← unblock timer
+                        setTimerTick(t => t + 1)
+                      }
+                    }, 200)
+                  }
+                }}
+              > 🔁
+              </button>                            
+              <button
+                ref={tipAuto}
+                className={`btn-auto-timer ${autoTimer ? "btn-auto-timer--on" : ""}`}
+                onClick={() => {
+                  if (autoTimer) {
+                    setAutoTimer(false)
+                    stop()
+                  } else {
+                    setAutoVoice(true)
+                    setMostrarResposta(false)
+                    setAutoTimer(true)
+                  }
+                }}
+              >
+                {autoTimer ? "⏹ Stop" : "▶ Auto"}
+              </button>
+            </div>
 
           </div>
         )}

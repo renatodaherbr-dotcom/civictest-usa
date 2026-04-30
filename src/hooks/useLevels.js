@@ -11,14 +11,7 @@ export function useLevels() {
     } catch (e) {
       console.error("Erro ao ler localStorage", e)
     }
-
-    // Se não existir, cria o array inicial de 1 a 128 com "easy"
-    // Usamos um objeto para facilitar acesso direto: { "1": "easy", "2": "easy" ... }
-    const initialLevels = {}
-    for (let i = 1; i <= 128; i++) {
-      initialLevels[i] = "easy"
-    }
-    return initialLevels
+    return {}   // ← empty, easy is the default via getLevel fallback
   })
 
   // Sempre que 'levels' mudar, salva no localStorage
@@ -32,10 +25,15 @@ export function useLevels() {
 
   // Função para atualizar uma pergunta específica
   const updateLevel = (questionNumber, newLevel) => {
-    setLevels(prev => ({
-      ...prev,
-      [questionNumber]: newLevel
-    }))
+    setLevels(prev => {
+      const updated = { ...prev }
+      if (newLevel === "easy") {
+        delete updated[questionNumber]   // ← don't store the default
+      } else {
+        updated[questionNumber] = newLevel
+      }
+      return updated
+    })
   }
 
   // Função para obter o nível de uma pergunta (default "easy" se não existir)

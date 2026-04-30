@@ -14,6 +14,7 @@ export function useTippy(content, options = {}) {
         delay: [300, 0], 
         arrow: true,
         theme: "light",
+        touch: false,
         ...options 
       })
     } else {

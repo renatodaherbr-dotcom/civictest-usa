@@ -78,9 +78,9 @@
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: 260px;
+  width: 270px;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgb(234, 234, 234);
   border: 1px solid rgba(100, 108, 255, 0.14);
   border-radius: 16px;
   box-shadow:
@@ -108,10 +108,10 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 5px;
   color: #3a3d4d;
   text-decoration: none;
-  border-radius: 10px;
+  border-radius: 5px;
   box-sizing: border-box;
   border: none;        /* ← adiciona */
   background: none;    /* ← adiciona */
@@ -137,7 +137,7 @@ label.hm-item--link {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
+  gap: 0px;
   padding-bottom: 12px;
 }
 
@@ -179,14 +179,9 @@ label.hm-item--link {
 
 /* ── DIVIDER ────────────────────────────────────── */
 .hm-divider {
-  height: 1px;
+  height: 2px;
   margin: 4px 0;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(120, 128, 160, 0.2),
-    transparent
-  );
+  background: linear-gradient(88deg, #8b8b8b75, #24040438);
 }
 
 /* ── MOBILE ─────────────────────────────────────── */

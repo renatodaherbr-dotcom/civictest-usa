@@ -7,6 +7,7 @@ export function SearchUI({
   searchTerm, searchHits,
   searchNavIdx,
   handleSearchOk, handleSearchClear,
+  searchFirst, searchLast,
   searchNext, searchPrev,
   searchInQ, searchInA,
   toggleSearchInQ, toggleSearchInA,
@@ -18,7 +19,7 @@ export function SearchUI({
   return (
     <>
       {/* ROW 1 — action buttons */}
-    {/* Envolvemos os botões e os resultados dentro de UM container cinza */}
+      {/* Envolvemos os botões e os resultados dentro de UM container cinza */}
       <div className="search-container">
 
         {/* LINHA 1: botões lado a lado */}
@@ -38,7 +39,6 @@ export function SearchUI({
           </button>
         </div>
 
-        {/* LINHA 2: resultados da busca */}
         {/* LINHA 2: só aparece quando há busca ativa */}
         {searchTerm && (
           <div className="search-hits-row">
@@ -46,9 +46,11 @@ export function SearchUI({
 
             {searchHits.length > 0 ? (
               <div className="search-nav-group">
-                <button className="btn-search-nav" onClick={searchPrev} disabled={searchNavIdx === 0}>‹</button>
+                <button className="btn-search-nav" onClick={searchFirst} disabled={searchNavIdx === 0}>«</button>
+                <button className="btn-search-nav" onClick={searchPrev}  disabled={searchNavIdx === 0}>‹</button>
                 <span className="search-count">{searchNavIdx + 1}/{searchHits.length}</span>
-                <button className="btn-search-nav" onClick={searchNext} disabled={searchNavIdx === searchHits.length - 1}>›</button>
+                <button className="btn-search-nav" onClick={searchNext}  disabled={searchNavIdx === searchHits.length - 1}>›</button>
+                <button className="btn-search-nav" onClick={searchLast}  disabled={searchNavIdx === searchHits.length - 1}>»</button>
               </div>
             ) : (
               <span className="search-empty">No hits</span>

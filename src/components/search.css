@@ -19,14 +19,12 @@
   box-sizing: border-box;
 }
 
-/* Linha dos botões — horizontal */
+/* Container row — gives it a white bg so buttons always contrast */
 .search-buttons-row {
   display: flex;
-  flex-direction: row;          /* ← botões lado a lado */
-  align-items: center;
+  gap: 8px;
   justify-content: center;
-  gap: 25px;
-  width: 100%;
+  padding: 6px 0;
 }
 
 /* Linha dos resultados */
@@ -35,32 +33,50 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 25%;
+  /*gap: 25%;*/
   padding: 3px 6px;
   min-height: 22px;
   font-size: 0.85rem;
-  width: 90%;
+  width: 96%;
 }
 .search-nav-group {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 8px;
   flex-shrink: 0;
 }
+
+/* Base shared style */
 .btn-bottom-action {
-  background: none;
-  border: 1px solid #646cff;
-  border-radius: 8px;
-  color: #646cff;
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
-  /*padding: 4px 14px;*/
-  font-size: 0.82rem;
-  line-height: 1.2;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+.btn-bottom-action:active { transform: scale(0.97); }
+
+.btn-bottom-action:first-child {
+  color: white;
+  background: #646cff;
+  box-shadow: 0 2px 8px rgba(100, 108, 255, 0.35);
+}
+.btn-bottom-action:first-child:hover {
+  background: #4e56d6;
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.45);
 }
 
-.btn-bottom-action:hover {
-  background: #646cff;
-  color: white;
+/* Search — light purple tint */
+.btn-bottom-action:last-child {
+  color: #646cff;
+  background: #eeeffe;
+  box-shadow: 0 2px 8px rgba(100, 108, 255, 0.12);
+}
+.btn-bottom-action:last-child:hover {
+  background: #dddefe;
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.22);
 }
 
 .bottom-level-filter {
@@ -87,7 +103,7 @@
   cursor: pointer;
   font-size: .9rem;
   /*padding: 0;*/
-  line-height: 1.2;
+  line-height: 1.8;
   border: 1px solid #646cff;
   border-radius: 8px;
   padding: 4px 14px;
@@ -102,9 +118,10 @@
   color: #646cff;
   font-weight: 700;
   white-space: nowrap;
-  overflow: hidden;
+  overflow: visible;
   text-overflow: ellipsis;
-  max-width: 120px;
+  max-width: 180px;
+  text-align: left;
 }
 
 /* ── CLEAR ──────────────────────────────────────── */
@@ -275,7 +292,7 @@
 
 @media (max-width: 425px) {
   .search-container {
-    gap: 8px;
+    gap: 5px;
     padding: 10px 10px;
     border-radius: 0;        /* ✅ remove arredondamento */
     border-top: none;        /* ✅ remove borda do topo */    

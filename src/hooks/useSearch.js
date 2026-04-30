@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react"
 
-export function useSearch(perguntasFiltradas, setIndex) {
+export function useSearch(perguntasFiltradas, setIndex, getEdit) {
   const [searchOpen, setSearchOpen]     = useState(false)
   const [searchInput, setSearchInput]   = useState("")
   const [searchTerm, setSearchTerm]     = useState("")
@@ -17,7 +17,7 @@ export function useSearch(perguntasFiltradas, setIndex) {
       .map((d, i) => ({
         i,
         q: d.question?.toLowerCase(),
-        a: d.answer?.toLowerCase()
+        a: (getEdit?.(d.id_number) ?? d.answer)?.toLowerCase()   // ← uses edit if exists
       }))
       .filter(x =>
         (searchInQ && x.q?.includes(t)) ||
@@ -44,6 +44,17 @@ export function useSearch(perguntasFiltradas, setIndex) {
     setSearchInput("")
     setSearchHits([])
     setSearchNavIdx(0)
+  }
+
+  const searchFirst = () => {
+    setSearchNavIdx(0)
+    setIndex(searchHits[0])
+  }
+
+  const searchLast = () => {
+    const last = searchHits.length - 1
+    setSearchNavIdx(last)
+    setIndex(searchHits[last])
   }
 
   const searchNext = () => {
@@ -82,8 +93,8 @@ export function useSearch(perguntasFiltradas, setIndex) {
     searchNavIdx,
     handleSearchOk,
     handleSearchClear,
-    searchNext,
-    searchPrev,
+    searchFirst, searchLast,
+    searchNext, searchPrev,
     searchInQ, searchInA,
     toggleSearchInQ, toggleSearchInA,
   }
