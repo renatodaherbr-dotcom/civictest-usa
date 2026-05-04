@@ -37,6 +37,10 @@ function App() {
   const [timerA, setTimerA] = useState(() => Number(localStorage.getItem("civic_timerA")) || 5)
   const isRepeatingRef = useRef(false)
   const [timerTick, setTimerTick] = useState(0)
+
+  const [shuffleMode, setShuffleMode] = useState(false)
+  const [shuffleOrder, setShuffleOrder] = useState([])  // array of indices
+  const [shufflePos, setShufflePos] = useState(0)        // position in shuffleOrder  
   
   const mountedRef = useRef(false)
   const { getEdit, saveEdit, clearEdit } = useEdits()
@@ -75,6 +79,7 @@ function App() {
     setOpcao_ss("0")
     setIndex(0)
     setMostrarResposta(false)
+    setShuffleMode(false)
     setLevelFilter("all")
     stop()
   }  
@@ -94,9 +99,9 @@ function App() {
     return perguntasFiltradas.filter(q => getLevel(q.id_number) === levelFilter)
   }, [perguntasFiltradas, levelFilter, getLevel])  // ← ) aqui!
 
-  const indexAtual = perguntasVisiveis.length > 0
-    ? Math.min(index, perguntasVisiveis.length - 1)
-    : 0
+  const indexAtual = shuffleMode
+    ? shuffleOrder[shufflePos] ?? 0
+    : (perguntasVisiveis.length > 0 ? Math.min(index, perguntasVisiveis.length - 1) : 0)
 
   const perguntaAtual = perguntasVisiveis[indexAtual]
 
@@ -108,10 +113,44 @@ function App() {
   const texto_a = getEdit(questionId) ?? texto_a_original  // ✅ sem erro
 
   // Funções de navegação
-  const primeira = () => setIndex(0)
-  const ultima = () => setIndex(perguntasVisiveis.length - 1)
-  const proxima = () => setIndex(prev => Math.min(prev + 1, perguntasVisiveis.length - 1))
-  const anterior = () => setIndex(prev => Math.max(prev - 1, 0))
+  const primeira = () => {
+    if (shuffleMode) {
+      setShufflePos(0)
+      setIndex(shuffleOrder[0])
+    } else {
+      setIndex(0)
+    }
+  }
+
+  const ultima = () => {
+    if (shuffleMode) {
+      const last = shuffleOrder.length - 1
+      setShufflePos(last)
+      setIndex(shuffleOrder[last])
+    } else {
+      setIndex(perguntasVisiveis.length - 1)
+    }
+  }
+  const proxima = () => {
+    if (shuffleMode) {
+      const next = shufflePos + 1
+      if (next >= shuffleOrder.length) return
+      setShufflePos(next)
+      setIndex(shuffleOrder[next])
+    } else {
+      setIndex(prev => Math.min(prev + 1, perguntasVisiveis.length - 1))
+    }
+  }
+  const anterior = () => {
+    if (shuffleMode) {
+      const prev = shufflePos - 1
+      if (prev < 0) return
+      setShufflePos(prev)
+      setIndex(shuffleOrder[prev])
+    } else {
+      setIndex(prev => Math.max(prev - 1, 0))
+    }
+  }  
 
   // Versões que resetam a resposta ao navegar
   const proximaComReset = () => {
@@ -208,8 +247,6 @@ function App() {
     if (speaking) return
     if (isRepeatingRef.current) return
 
-    const isLast = indexAtual >= perguntasVisiveis.length - 1
-
     if (!mostrarResposta) {
       // Q audio finished → start Q wait
       const t = setTimeout(() => {
@@ -303,6 +340,43 @@ function App() {
     reader.readAsText(file)
   }
 
+  const buildShuffle = (length) => {
+    const arr = Array.from({ length }, (_, i) => i)
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]]
+    }
+    return arr
+  }
+
+  const toggleShuffle = () => {
+    if (shuffleMode) {
+      setShuffleMode(false)
+      setShuffleOrder([])
+      setShufflePos(0)
+    } else {
+      const order = buildShuffle(perguntasVisiveis.length)
+      setShuffleOrder(order)
+      setShufflePos(0)
+      setMostrarResposta(false)
+      setShuffleMode(true)     // ← set last
+      // remove setIndex(order[0]) — indexAtual handles it below
+    }
+  }
+
+  useEffect(() => {
+    if (!shuffleMode) return
+    const order = buildShuffle(perguntasVisiveis.length)
+    setShuffleOrder(order)
+    setShufflePos(0)
+  }, [perguntasVisiveis])  
+  
+  const isFirst = shuffleMode
+    ? shuffleOrder.length === 0 || shufflePos === 0
+    : indexAtual === 0  
+  const isLast = shuffleMode
+    ? shuffleOrder.length === 0 || shufflePos >= shuffleOrder.length - 1
+    : indexAtual >= perguntasVisiveis.length - 1
 
   return (
     <>
@@ -325,7 +399,7 @@ function App() {
           timerQ={timerQ} onTimerQ={setTimerQ}   // ← ADD
           timerA={timerA} onTimerA={setTimerA}   // ← ADD          
         />
-        <div><h3>Civic Test USCIS 2026</h3></div>      
+        <div><h3 className="civic-test-title">Civic Test USCIS 2026</h3></div>      
 
         {/* SELECTORS */}
         {/* DATABASE SELECTOR */}
@@ -362,9 +436,11 @@ function App() {
             : "Nenhuma Sec/Subsec"} 
           {" "}—{" "}
           <strong>
-          {perguntasVisiveis.length > 0
-            ? `Pergunta ${indexAtual + 1} de ${perguntasVisiveis.length}`
-            : "Nenhuma pergunta"}
+            {perguntasVisiveis.length > 0
+              ? shuffleMode
+                ? `Shuffle ${shufflePos + 1} of ${shuffleOrder.length}`
+                : `Pergunta ${indexAtual + 1} de ${perguntasVisiveis.length}`
+              : "Nenhuma pergunta"}
           </strong>
         </div>
 
@@ -374,7 +450,7 @@ function App() {
             ref={tipPrev}
             className="btn-prev"
             onClick={anteriorComReset}
-            disabled={indexAtual === 0}>
+            disabled={isFirst}>
             <span className="btn-arrow">← </span>Prev
           </button>
 
@@ -382,7 +458,7 @@ function App() {
             ref={tipAnswer}
             className={mostrarResposta ? "btn-nextq" : "btn-answer"}
             onClick={handleAnswer}
-            disabled={mostrarResposta && indexAtual >= perguntasVisiveis.length - 1}>
+            disabled={mostrarResposta && isLast}>
             {mostrarResposta ? "Next Q" : "Answer"}
           </button>
 
@@ -390,7 +466,7 @@ function App() {
             ref={tipSkip}
             className="btn-next"
             onClick={proximaComReset}
-            disabled={indexAtual >= perguntasVisiveis.length - 1}>
+            disabled={isLast}>
             Skip<span className="btn-arrow"> →</span>
           </button>
 
@@ -532,21 +608,21 @@ function App() {
 
         {/* BOTÕES DE NAVEGAÇÃO */}
         <div className="botao-section">
-          <button onClick={primeira} disabled={indexAtual === 0}>«</button>
+          <button onClick={primeira} disabled={isFirst}>«</button>
           <button 
-            onClick={anterior} disabled={indexAtual === 0}
+            onClick={anterior} disabled={isFirst}
             onMouseDown={() => startAuto(anterior)}
             onMouseUp={stopAuto}
             onMouseLeave={stopAuto}
           >‹</button>
           <button onClick={proxima} 
-            disabled={indexAtual >= perguntasVisiveis.length - 1}
+            disabled={isLast}
             onMouseDown={() => startAuto(proxima)}
             onMouseUp={stopAuto}
             onMouseLeave={stopAuto}
           >›</button>
           <button onClick={ultima} 
-            disabled={indexAtual >= perguntasVisiveis.length - 1}>»</button>
+            disabled={isLast}>»</button>
 
           {/* CHECKBOX MOSTRAR RESPOSTA */}
           <div className="checkbox-col">
@@ -572,6 +648,16 @@ function App() {
                 {" "}🔊 Play voices
               </label>
             )}
+
+            <label className="checkbox-resposta">
+              <input
+                type="checkbox"
+                checked={shuffleMode}
+                onChange={toggleShuffle}
+              />
+              {" "}🔀 Shuffle
+            </label>
+            
           </div>
 
         </div>
