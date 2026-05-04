@@ -41,7 +41,7 @@ section#center textarea {
   box-sizing: border-box;   /* inclui padding e borda no width */
 }
 .civic-test-title {
-    color: black;
+    color: rgb(0, 4, 123);
     background: white;
     padding: 5px 49px;
     border-radius: 12px;
@@ -51,15 +51,11 @@ section#center textarea {
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     margin: 0;
 }
-.status-bar {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between; /* Empurra Level pra esquerda e Status pra direita */
+.civic-test-subtitle{
   width: 100%;
-  margin: -10px 0 5px; /* Ajusta o espaçamento vertical geral */
-  box-sizing: border-box;
-  padding: 0 5px;
+  padding: 5px 0;
+  color: #941919;
+  font-style: bold;
 }
 
 /* Ajusta o label-status para não ter margens grandes e manter o tamanho */

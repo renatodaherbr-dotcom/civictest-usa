@@ -460,7 +460,12 @@ function App() {
           timerQ={timerQ} onTimerQ={setTimerQ}   // ← ADD
           timerA={timerA} onTimerA={setTimerA}   // ← ADD          
         />
-        <div><h3 className="civic-test-title">Civic Test USCIS 2026</h3></div>      
+        <div>
+          <h3 className="civic-test-title">Naturalization USCIS 2026
+            <h4 className="civic-test-subtitle">Civi Test and N-400 Part 9</h4>
+          </h3>
+          
+        </div>
 
         {/* SELECTORS */}
         {/* DATABASE SELECTOR */}
