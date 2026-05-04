@@ -113,10 +113,10 @@ function App() {
 
   // ✅ questionId declarado antes de ser usado em texto_a
   const questionId = perguntaAtual?.id_number || ""
-
+  const editKey = `${dbFile}__${questionId}`
   const texto_q = perguntaAtual?.question ?? ""
   const texto_a_original = perguntaAtual?.answer ?? ""
-  const texto_a = getEdit(questionId) ?? texto_a_original  // ✅ sem erro
+  const texto_a = getEdit(editKey) ?? texto_a_original  // ✅ sem erro
 
   // Funções de navegação
   const primeira = () => {
@@ -502,11 +502,11 @@ function App() {
             readOnly
           />          
           <textarea
-            className={`ta-resposta ${!effectiveMostrarResposta ? "ta-hidden" : ""} ${getEdit(questionId) ? "ta-edited" : ""}`}
+            className={`ta-resposta ${!effectiveMostrarResposta ? "ta-hidden" : ""} ${getEdit(editKey) ? "ta-edited" : ""}`}
             value={texto_a}
             readOnly={!effectiveMostrarResposta}
             tabIndex={effectiveMostrarResposta ? 0 : -1}
-            onChange={(e) => saveEdit(questionId, e.target.value)}
+            onChange={(e) => saveEdit(editKey, e.target.value)}
           />
           {effectiveMostrarResposta && (
             <span className="ta-editable-hint">✏️ editable</span>
@@ -539,10 +539,10 @@ function App() {
             </div>
 
             {/* Reset edit — only when needed */}
-            {effectiveMostrarResposta && getEdit(questionId) && (
+            {effectiveMostrarResposta && getEdit(editKey) && (
               <button
                 className="btn-reset-edit"
-                onClick={() => clearEdit(questionId)}
+                onClick={() => clearEdit(editKey)}
                 style={{ marginLeft: "4px" }}
               >
                 ↩ Reset

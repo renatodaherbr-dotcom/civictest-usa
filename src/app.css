@@ -362,10 +362,11 @@ section#center textarea {
 
 .checkbox-col {
   display: flex;
-  flex-direction: column;   /* ✅ empilha verticalmente */
+  flex-direction: row;   /* ✅ empilha verticalmente */
   align-items: flex-start;
   gap: 0px;
   margin-left: 40px;
+  line-height: 1.4;
 }
 
 .checkbox-resposta {
