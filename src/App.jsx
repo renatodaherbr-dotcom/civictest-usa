@@ -44,6 +44,9 @@ function App() {
   
   const mountedRef = useRef(false)
   const { getEdit, saveEdit, clearEdit } = useEdits()
+  const isN400 = dbFile === "bd_n400_part9.csv"
+  const effectiveMostrarResposta = isN400 ? true : mostrarResposta
+  
   useEffect(() => { localStorage.setItem("civic_db", dbFile) }, [dbFile])
   useEffect(() => { localStorage.setItem("civic_level", levelFilter) }, [levelFilter])
   // ← ADD — persist voice (only when selected)
@@ -82,6 +85,9 @@ function App() {
     setShuffleMode(false)
     setLevelFilter("all")
     stop()
+    if (file === "bd_n400_part9.csv") {
+      setMostrarResposta(true)
+    }    
   }  
 
   // ✅ 1st filter — section + subsection
@@ -165,9 +171,8 @@ function App() {
   const search = useSearch(perguntasVisiveis, setIndex, getEdit)
 
   const handleAnswer = () => {
-    if (!mostrarResposta) {
+    if (!effectiveMostrarResposta) {
       setMostrarResposta(true)
-      // Browser já gerencia fila — não precisa waitForQ
     } else {
       proximaComReset()
     }
@@ -265,8 +270,8 @@ function App() {
 
   const tipPrev = useTippy("Previous question")
   const tipAnswer = useTippy(
-    mostrarResposta ? "Go to next question" : "Show the answer"
-  )  
+    effectiveMostrarResposta ? "Go to next question" : "Show the answer"
+  ) 
   const tipSkip = useTippy("Skip to next question")
   const tipQ = useTippy("Read question aloud.")
   const tipA = useTippy("Read answer aloud")
@@ -404,21 +409,18 @@ function App() {
         {/* SELECTORS */}
         {/* DATABASE SELECTOR */}
         <div className="db-row">
-          <select
-            value={opc_s}
-            onChange={(e) => handleSectionChange(e.target.value)}>
-            <option value="0">All Sections</option>
-            {[...new Set(dados.map(d => d.section))].map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-
-          <select
-            value={opc_ss}
-            onChange={(e) => handleSubSectionChange(e.target.value)}>
+          {!isN400 && (
+            <select value={opc_s} onChange={(e) => handleSectionChange(e.target.value)}>
+              <option value="0">All Sections</option>
+              {[...new Set(dados.map(d => d.section))].map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          )}
+          <select value={opc_ss} onChange={(e) => handleSubSectionChange(e.target.value)}>
             <option value="0">All Subsections</option>
             {dados
-              .filter(d => d.section === opc_s)
+              .filter(d => opc_s === "0" || d.section === opc_s)
               .map(d => d.sub_section)
               .filter((v, i, arr) => arr.indexOf(v) === i)
               .map(s => (
@@ -455,20 +457,23 @@ function App() {
           </button>
 
           <button
-            ref={tipAnswer}
-            className={mostrarResposta ? "btn-nextq" : "btn-answer"}
+            className={effectiveMostrarResposta ? "btn-nextq" : "btn-answer"}
             onClick={handleAnswer}
-            disabled={mostrarResposta && isLast}>
-            {mostrarResposta ? "Next Q" : "Answer"}
+            disabled={isLast}
+          >
+            {effectiveMostrarResposta ? "Next Q" : "Answer"}
           </button>
 
-          <button
-            ref={tipSkip}
-            className="btn-next"
-            onClick={proximaComReset}
-            disabled={isLast}>
-            Skip<span className="btn-arrow"> →</span>
-          </button>
+          {!isN400 && (
+            <button
+              ref={tipSkip}
+              className="btn-next"
+              onClick={proximaComReset}
+              disabled={isLast}>
+              {isN400 ? "Next →" : "Skip →"}
+              {/* <span className="btn-arrow"> →</span> */}
+            </button>
+          )}          
 
           {/* COMBOBOX DE DIFICULDADE */}
           {questionId && (
@@ -489,7 +494,7 @@ function App() {
         </div>
 
         {/* TEXT AREA */}
-        <div className={`textarea-wrapper ${mostrarResposta ? "mostrar-resposta" : ""} ${dbFile === "bd_civic3.csv" ? "split-6040" : "split-5050"}`}>
+        <div className={`textarea-wrapper ${effectiveMostrarResposta ? "mostrar-resposta" : ""} ${isN400 ? "split-part9" : dbFile === "bd_civic3.csv" ? "split-6040" : "split-5050"}`}>
           <span className="ta-q-index">{questionId}</span>
           <textarea
             className="ta-pergunta"
@@ -497,16 +502,16 @@ function App() {
             readOnly
           />          
           <textarea
-            className={`ta-resposta ${!mostrarResposta ? "ta-hidden" : ""} ${getEdit(questionId) ? "ta-edited" : ""}`}
+            className={`ta-resposta ${!effectiveMostrarResposta ? "ta-hidden" : ""} ${getEdit(questionId) ? "ta-edited" : ""}`}
             value={texto_a}
-            readOnly={!mostrarResposta}
-            tabIndex={mostrarResposta ? 0 : -1}
+            readOnly={!effectiveMostrarResposta}
+            tabIndex={effectiveMostrarResposta ? 0 : -1}
             onChange={(e) => saveEdit(questionId, e.target.value)}
           />
-          {/* ✏️ indicador — só aparece quando resposta está visível */}
-          {mostrarResposta && (
+          {effectiveMostrarResposta && (
             <span className="ta-editable-hint">✏️ editable</span>
-          )}          
+          )}
+
         </div>
         
         {supported && (
@@ -522,7 +527,7 @@ function App() {
                 {speakingId === "q" ? "⏹ Q" : "🔊 Q"}
               </button>
 
-              {mostrarResposta && (
+              {effectiveMostrarResposta && (
                 <button
                   ref={tipA}
                   className={`btn-speech ${speakingId === "a" ? "btn-speech-active" : ""}`}
@@ -534,7 +539,7 @@ function App() {
             </div>
 
             {/* Reset edit — only when needed */}
-            {mostrarResposta && getEdit(questionId) && (
+            {effectiveMostrarResposta && getEdit(questionId) && (
               <button
                 className="btn-reset-edit"
                 onClick={() => clearEdit(questionId)}
@@ -627,11 +632,12 @@ function App() {
           {/* CHECKBOX MOSTRAR RESPOSTA */}
           <div className="checkbox-col">
             <label className="checkbox-resposta">
-              <input
-                type="checkbox"
-                checked={mostrarResposta}
-                onChange={(e) => setMostrarResposta(e.target.checked)}
-              />
+            <input
+              type="checkbox"
+              checked={effectiveMostrarResposta}
+              disabled={isN400}
+              onChange={(e) => setMostrarResposta(e.target.checked)}
+            />
               {" "}Show Answer
             </label>
 

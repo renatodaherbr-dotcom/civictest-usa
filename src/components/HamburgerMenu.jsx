@@ -242,6 +242,7 @@ export function HamburgerMenu({
             >
               <option value="bd_civic2.csv">📖 Civic 2026 — Full answers</option>
               <option value="bd_civic3.csv">⚡ Civic 2026 — Short answers</option>
+              <option value="bd_n400_part9.csv">📋 N-400 Part 9</option>
             </select>
           </div>
 

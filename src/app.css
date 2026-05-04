@@ -246,6 +246,32 @@ section#center textarea {
 .textarea-wrapper.split-6040.mostrar-resposta .ta-pergunta { height: 60%; }
 .textarea-wrapper.split-6040 .ta-resposta               { height: 40%; }
 
+/* ── Part 9: taller wrapper, three-area split ─────────── */
+.textarea-wrapper.split-part9 {
+  height: calc(28svh + 84px);
+  min-height: calc(120px + 84px);
+  max-height: calc(260px + 84px);
+}
+.textarea-wrapper.split-part9 .ta-pergunta {
+  height: 95%;
+}
+.textarea-wrapper.split-part9.mostrar-resposta .ta-pergunta {
+  height: 40%;
+}
+.textarea-wrapper.split-part9 .ta-resposta {
+  height: 60%;
+  bottom: 0;           /* flush to bottom — no My Answer below */
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+.textarea-wrapper.split-part9.mostrar-resposta .ta-resposta {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;  /* editable */
+}
+
 /* Botões PANel */
 .botao-pan {
   display: flex;
@@ -498,6 +524,11 @@ section#center textarea {
 }
 
 @media (max-width: 1024px) {
+  html, body {
+    height: 90%;
+    overflow: hidden;
+  }
+
   #center {
     padding: 16px 16px;
     gap: 18px;
@@ -562,10 +593,10 @@ section#center textarea {
 
 .auto-timer-row {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: baseline;
+  gap: 0px;
   margin-left: auto;  /* ← pushes to far right */
-  margin-top: 6px; /* ← negative to reduce gap from above */
+  margin-top: 4px; /* ← negative to reduce gap from above */
 }
 
 .btn-auto-timer {
