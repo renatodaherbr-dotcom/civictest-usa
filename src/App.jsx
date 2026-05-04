@@ -261,7 +261,7 @@ function App() {
         setAutoTimer(false)
         return
       }
-
+      
       const t = setTimeout(() => {
         if (!window.speechSynthesis.speaking) {
           proximaComReset()
@@ -316,7 +316,7 @@ function App() {
         setAutoTimer(false)
         return
       }
-
+      if (autoVoice && (speaking || window.speechSynthesis.speaking)) return
       const t = setTimeout(() => {
         proximaComReset()
       }, timerA * 1000)
@@ -520,7 +520,7 @@ function App() {
           <button
             className={effectiveMostrarResposta ? "btn-nextq" : "btn-answer"}
             onClick={handleAnswer}
-            disabled={isLast}
+            disabled={isLast && effectiveMostrarResposta}
           >
             {effectiveMostrarResposta ? "Next Q" : "Answer"}
           </button>
