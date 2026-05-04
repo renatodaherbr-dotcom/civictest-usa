@@ -462,7 +462,7 @@ function App() {
         />
         <div id="title-box">
           <h3 className="civic-test-title">Naturalization USCIS 2026
-            <p className="civic-test-subtitle">Civic Test and N-400 Part 9</p>
+            <p className="civic-test-subtitle">Civic Test and N400 Part 9</p>
           </h3>
           
         </div>
