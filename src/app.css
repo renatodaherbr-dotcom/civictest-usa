@@ -40,22 +40,31 @@ section#center textarea {
   resize: vertical;         /* usuário só pode mudar altura */
   box-sizing: border-box;   /* inclui padding e borda no width */
 }
+#title-box{
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 0 6px rgba(0, 0, 255, 0.3);
+}
 .civic-test-title {
     color: rgb(0, 4, 123);
-    background: white;
-    padding: 5px 49px;
-    border-radius: 12px;
+    /* background: white; */
+    padding: 5px 50px;
+    /* border-radius: 12px; */
     font-size: 1.2rem;
     font-weight: 600;
-    border: 2px solid #c0c0c0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    /* border: 2px solid #c0c0c0; */
+    /* box-shadow: 0 2px 8px rgba(0,0,0,0.05); */
     margin: 0;
 }
 .civic-test-subtitle{
   width: 100%;
   padding: 5px 0;
   color: #941919;
-  font-style: bold;
+  font-size: 18px;
+  line-height: 1.2;
+  @media (max-width: 1024px) {
+    font-size: 14px;
+  }  
 }
 
 /* Ajusta o label-status para não ter margens grandes e manter o tamanho */
@@ -73,7 +82,6 @@ section#center textarea {
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 8px;
   width: 100%;
 }
 
@@ -582,6 +590,41 @@ section#center textarea {
   }
 }
 
+@media (max-height: 700px) {
+  .textarea-wrapper {
+    min-height: 160px;   /* ou o valor que você usa */
+  }
+
+  .botao-pan,
+  .botao-section {
+    gap: 4px;
+  }
+
+  .civic-test-title {
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+  }
+
+  .label-status {
+    font-size: 0.7rem;
+  }
+
+  .speech-btns {
+    padding: 4px 6px;
+  }
+}
+
+@media (max-height: 600px) {
+  /* tela muito curta — esconde elementos secundários */
+  .ta-editable-hint {
+    display: none;
+  }
+
+  #spacer {
+    display: none;
+  }
+
+}
 .btn-font {
   width: 28px;
   height: 28px;
