@@ -472,13 +472,28 @@ section#center textarea {
 
 /* ── SPEECH BUTTONS ─── */
 .speech-btns {
+  position: relative;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
   width: 100%;
-  margin: -25px 0px 0px 0px;  /* ✅ remove o -15px da esquerda */
+  margin: -25px 0px 0px 0px;
+  --speech-progress: 0%;
+}
+
+.speech-btns::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 0;
+  width: var(--speech-progress);
+  height: 4px;
+  background: #ff0f0f;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 3;
 }
 
 .select-voice {
@@ -613,8 +628,16 @@ section#center textarea {
   transition: background 0.15s, color 0.15s;
 }
 .btn-auto-timer:hover       { background: #646cff; color: white; }
-.btn-auto-timer--on         { background: #ef4444; border-color: #ef4444; color: white; }
-.btn-auto-timer--on:hover   { background: #c53030; border-color: #c53030; }
+.btn-auto-timer--on {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: white;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.btn-auto-timer--on:hover {
+  border-color: #c53030;
+  background: #ff0000;
+}
 
 .timer-label {
   display: flex;
@@ -635,19 +658,20 @@ section#center textarea {
 }
 
 .btn-repeat {
-  height: 26px;
-  min-width: 28px;
-  padding: 0 6px;
-  border: 0.1px solid #f1f1f1;
-  border-radius: 6px;
   background: rgba(255,255,255,0.85);
-  font-size: 1.2rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 0px 8px;
+  font-size: 0.75rem;
+  line-height: 0.9;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  backdrop-filter: blur(4px);
+  height: 25px;
+  margin-top: 3px;
+  box-sizing: border-box;
+  min-width: 44px;
+  text-align: center;
 }
-.btn-repeat:hover {
-  border-color: #646cff;
-  background: #eeeffe;
-  border: 1.5px solid #898989;
-}
+.btn-repeat:hover { background: #646cff; color: white; border-color: #646cff; }
 .btn-repeat:active { transform: scale(0.95); }

@@ -45,6 +45,7 @@ function App() {
   const mountedRef = useRef(false)
   const { getEdit, saveEdit, clearEdit } = useEdits()
   const isN400 = dbFile === "bd_n400_part9.csv"
+  const [qTimerArmed, setQTimerArmed] = useState(false)
   const effectiveMostrarResposta = isN400 ? true : mostrarResposta
   
   useEffect(() => { localStorage.setItem("civic_db", dbFile) }, [dbFile])
@@ -162,10 +163,12 @@ function App() {
   const proximaComReset = () => {
     proxima()
     setMostrarResposta(false)
+    setQTimerArmed(false)
   }
   const anteriorComReset = () => {
     anterior()
     setMostrarResposta(false)   // effect re-fires automatically for new index
+    setQTimerArmed(false)
   }
 
   const search = useSearch(perguntasVisiveis, setIndex, getEdit)
@@ -213,6 +216,12 @@ function App() {
 
   // Obtenha o nível atual do hook
   const currentLevel = questionId ? getLevel(questionId) : "easy"
+  const isFirst = shuffleMode
+    ? shuffleOrder.length === 0 || shufflePos === 0
+    : indexAtual === 0  
+  const isLast = shuffleMode
+    ? shuffleOrder.length === 0 || shufflePos >= shuffleOrder.length - 1
+    : indexAtual >= perguntasVisiveis.length - 1
 
   // Effect 1 — só dispara quando MUDA DE PERGUNTA → fala Q
   useEffect(() => {
@@ -225,48 +234,99 @@ function App() {
       stop()
       speak(texto_q, "q")
     }
-  }, [autoVoice, texto_q])   // ← sem mostrarResposta aqui!
+  }, [autoVoice, texto_q])
 
-  // Effect 2 — só dispara quando ANSWER é revelado → enfileira A
+  // Effect 2 — fala A quando a resposta estiver visível
   useEffect(() => {
-    if (!mostrarResposta) return
+    if (!effectiveMostrarResposta) return
     if (test.testActive) return
     if (autoVoice && texto_a) {
-      speakQueued(texto_a, "a")  // ← não cancela Q!
+      speakQueued(texto_a, "a")
     }
-  }, [mostrarResposta, autoVoice, texto_a])
+  }, [effectiveMostrarResposta, autoVoice, texto_a, test.testActive])
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.ctrlKey && e.key === "f") {
-        e.preventDefault()          // blocks browser's native Ctrl+F
-        search.setSearchOpen(true)
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [search])
-  
+  // Effect 3 — auto timer
   useEffect(() => {
     if (!autoTimer) return
-    if (speaking) return
     if (isRepeatingRef.current) return
 
+    const progressEl = document.querySelector(".speech-btns")
+
+    if (isN400) {
+      progressEl?.style.removeProperty("--speech-progress")
+
+      if (window.speechSynthesis.speaking) return
+
+      if (isLast) {
+        setAutoTimer(false)
+        return
+      }
+
+      const t = setTimeout(() => {
+        if (!window.speechSynthesis.speaking) {
+          proximaComReset()
+        }
+      }, 500)
+
+      return () => clearTimeout(t)
+    }
+
     if (!mostrarResposta) {
-      // Q audio finished → start Q wait
+      if (autoVoice && speaking) {
+        progressEl?.style.removeProperty("--speech-progress")
+        return
+      }
+
+      if (!qTimerArmed) {
+        const armDelay = setTimeout(() => {
+          if (!window.speechSynthesis.speaking) {
+            setQTimerArmed(true)
+          }
+        }, 120)
+
+        return () => clearTimeout(armDelay)
+      }
+
+      const start = Date.now()
+      const rafId = { current: null }
+
+      const animate = () => {
+        const elapsed = (Date.now() - start) / 1000
+        const pct = Math.min((elapsed / timerQ) * 100, 100)
+        progressEl?.style.setProperty("--speech-progress", `${pct}%`)
+        if (pct < 100) rafId.current = requestAnimationFrame(animate)
+      }
+
+      rafId.current = requestAnimationFrame(animate)
+
       const t = setTimeout(() => {
         setMostrarResposta(true)
+        setQTimerArmed(false)
       }, timerQ * 1000)
-      return () => clearTimeout(t)
+
+      return () => {
+        clearTimeout(t)
+        cancelAnimationFrame(rafId.current)
+        progressEl?.style.removeProperty("--speech-progress")
+      }
     } else {
-      // A audio finished → start A wait
-      if (isLast) { setAutoTimer(false); return }
+      progressEl?.style.removeProperty("--speech-progress")
+
+      if (isLast) {
+        setAutoTimer(false)
+        return
+      }
+
       const t = setTimeout(() => {
         proximaComReset()
       }, timerA * 1000)
-      return () => clearTimeout(t)
+
+      return () => {
+        clearTimeout(t)
+        progressEl?.style.removeProperty("--speech-progress")
+      }
     }
-  }, [autoTimer, indexAtual, mostrarResposta, timerQ, timerA, speaking, timerTick])
+  }, [autoTimer, indexAtual, mostrarResposta, timerQ, timerA, speaking, timerTick, isLast, isN400, qTimerArmed, autoVoice])
 
   const tipPrev = useTippy("Previous question")
   const tipAnswer = useTippy(
@@ -376,13 +436,9 @@ function App() {
     setShufflePos(0)
   }, [perguntasVisiveis])  
   
-  const isFirst = shuffleMode
-    ? shuffleOrder.length === 0 || shufflePos === 0
-    : indexAtual === 0  
-  const isLast = shuffleMode
-    ? shuffleOrder.length === 0 || shufflePos >= shuffleOrder.length - 1
-    : indexAtual >= perguntasVisiveis.length - 1
-
+  const timerProgressStyle = autoTimer && !mostrarResposta
+    ? { animation: `timerSweep ${timerQ}s linear forwards` }
+    : undefined   // ← undefined removes the style attr entirely, not {}
   return (
     <>
       <section id="center">
@@ -552,47 +608,51 @@ function App() {
             {/* RIGHT — Auto timer controls */}
             <div className="auto-timer-row">
               {/* ← REPEAT button */}
-              <button
-                className="btn-repeat"
-                ref={tipRepeat}
-                onClick={() => {
-                  stop()
-                  if (mostrarResposta) {
-                    isRepeatingRef.current = true        // ← block timer
-                    speak(texto_q, "q")
-                    const checkDone = setInterval(() => {
-                      if (!window.speechSynthesis.speaking) {
-                        clearInterval(checkDone)
-                        setTimeout(() => {
-                          speakQueued(texto_a, "a")
-                          // Clear block after A finishes
-                          const checkA = setInterval(() => {
-                            if (!window.speechSynthesis.speaking) {
-                              clearInterval(checkA)
-                              isRepeatingRef.current = false   // ← unblock timer
-                              setTimerTick(t => t + 1)
-                            }
-                          }, 200)
-                        }, 2000)
-                      }
-                    }, 200)
-                  } else {
-                    isRepeatingRef.current = true        // ← block timer
-                    speak(texto_q, "q")
-                    const checkDone = setInterval(() => {
-                      if (!window.speechSynthesis.speaking) {
-                        clearInterval(checkDone)
-                        isRepeatingRef.current = false   // ← unblock timer
-                        setTimerTick(t => t + 1)
-                      }
-                    }, 200)
-                  }
-                }}
-              > 🔁
-              </button>                            
+              {autoTimer && autoVoice && (
+                <button
+                  className="btn-repeat"
+                  ref={tipRepeat}
+                  onClick={() => {
+                    stop()
+                    if (mostrarResposta) {
+                      isRepeatingRef.current = true        // ← block timer
+                      speak(texto_q, "q")
+                      const checkDone = setInterval(() => {
+                        if (!window.speechSynthesis.speaking) {
+                          clearInterval(checkDone)
+                          setTimeout(() => {
+                            speakQueued(texto_a, "a")
+                            // Clear block after A finishes
+                            const checkA = setInterval(() => {
+                              if (!window.speechSynthesis.speaking) {
+                                clearInterval(checkA)
+                                isRepeatingRef.current = false   // ← unblock timer
+                                setTimerTick(t => t + 1)
+                              }
+                            }, 200)
+                          }, 2000)
+                        }
+                      }, 200)
+                    } else {
+                      isRepeatingRef.current = true        // ← block timer
+                      speak(texto_q, "q")
+                      const checkDone = setInterval(() => {
+                        if (!window.speechSynthesis.speaking) {
+                          clearInterval(checkDone)
+                          isRepeatingRef.current = false   // ← unblock timer
+                          setTimerTick(t => t + 1)
+                        }
+                      }, 200)
+                    }
+                  }}
+                > 🔁 Rep.
+                </button>
+              )}                        
               <button
                 ref={tipAuto}
+                key={`${indexAtual}`}
                 className={`btn-auto-timer ${autoTimer ? "btn-auto-timer--on" : ""}`}
+                style={timerProgressStyle}
                 onClick={() => {
                   if (autoTimer) {
                     setAutoTimer(false)
@@ -600,6 +660,7 @@ function App() {
                   } else {
                     setAutoVoice(true)
                     setMostrarResposta(false)
+                    setQTimerArmed(false)
                     setAutoTimer(true)
                   }
                 }}
