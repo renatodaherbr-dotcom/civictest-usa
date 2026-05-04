@@ -48,9 +48,9 @@ section#center textarea {
 
 /* Ajusta o label-status para não ter margens grandes e manter o tamanho */
 .label-status {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #555;
-  margin: -20px 0 10px;
+  margin: -20px 0 1px;
   text-align: right; /* Alinha o texto à direita */
 }
 
