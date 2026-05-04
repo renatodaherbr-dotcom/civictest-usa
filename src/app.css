@@ -564,7 +564,8 @@ section#center textarea {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-left: auto;    /* ← pushes to far right */
+  margin-left: auto;  /* ← pushes to far right */
+  margin-top: 6px; /* ← negative to reduce gap from above */
 }
 
 .btn-auto-timer {
