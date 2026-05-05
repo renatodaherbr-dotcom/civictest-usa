@@ -600,9 +600,19 @@ section#center textarea {
   box-sizing: border-box;
   min-width: 44px;
   text-align: center;
+  -webkit-tap-highlight-color: transparent;  /* removes iOS blue flash */
+  touch-action: manipulation;  
+}
+.btn-repeat:focus {
+  outline: none;       /* remove focus ring after tap */
+  box-shadow: none;    /* remove any focus glow */
 }
 .btn-repeat:hover { background: #646cff; color: white; border-color: #646cff; }
 .btn-repeat:active { transform: scale(0.95); }
+.btn-repeat:not(:active) {
+  background: var(--color-surface);   /* or whatever your default bg is */
+  color: var(--color-text);
+}
 
 /* ============================================
    RESPONSIVE — width breakpoints

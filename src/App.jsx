@@ -649,9 +649,20 @@ function App() {
                 <button
                   className="btn-repeat"
                   ref={tipRepeat}
-                  onClick={() => {
-                    setTimeout(() => btnAutoRef.current?.focus(), 50)
-                    stop()
+                  onClick={(e) => {
+                    // 1. remove focus/active state from Rep. button immediately
+                    e.currentTarget.blur()
+
+                    // 2. move focus to Auto button (works on Android; iOS needs the workaround below)
+                    setTimeout(() => {
+                      const autoBtn = btnAutoRef.current
+                      if (!autoBtn) return
+                      autoBtn.focus({ preventScroll: true })
+                      // iOS workaround: focus only works inside a gesture, so we
+                      // temporarily make it focusable and tap it programmatically
+                      autoBtn.setAttribute('tabindex', '0')
+                    }, 50)
+                  stop()
                     if (mostrarResposta) {
                       isRepeatingRef.current = true        // ← block timer
                       speak(texto_q, "q")
