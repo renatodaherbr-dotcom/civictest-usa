@@ -189,7 +189,7 @@ export function TestUI({
         )}
 
         {/* ── TEXTAREAS ── */}
-        <div className={`test-ta-wrapper ${answerShown ? "test-show-answer" : ""} ${isReviewing ? "test-reviewing" : ""}`}>
+        <div className={`test-ta-wrapper ${(answerShown || isReviewing) ? "test-show-answer" : ""} ${isReviewing ? "test-reviewing" : ""}`}>
           <textarea className="test-ta-q"     value={displayQ?.question ?? ""}      readOnly />
           <textarea className="test-ta-short" value={displayQ?.short_answer ?? ""}  readOnly />
           {!isReviewing && (

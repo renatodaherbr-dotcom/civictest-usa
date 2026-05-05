@@ -417,12 +417,16 @@
   color: #333;
 }
 /* Review: mostra Q + short, sem esconder a pergunta */
+.test-reviewing.test-show-answer .test-ta-q,
 .test-reviewing .test-ta-q {
+  display: block !important;
   flex: 1 1 auto;
   height: auto;
+  min-height: 0;
   opacity: 1;
   pointer-events: auto;
   padding: 10px;
+  border-width: 1px;
   overflow-y: auto;
 }
 

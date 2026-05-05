@@ -28,7 +28,7 @@ export function SearchUI({
             onClick={onStartTest}
             ref={tipTest}
           >
-            📝 Start Test
+            📝 Test Simulation
           </button>
 
           <button className="btn-bottom-action btn-search" 
