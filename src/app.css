@@ -682,8 +682,12 @@ section#center textarea {
   }
 
   .civic-test-title {
-    font-size: 0.8rem;
+    font-size: 1.0rem;
     margin-bottom: 2px;
+  }
+
+  .civic-test-subtitle {
+    font-size: 0.8rem;
   }
 
   .label-status {

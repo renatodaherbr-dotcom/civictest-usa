@@ -47,6 +47,8 @@ function App() {
   const isN400 = dbFile === "bd_n400_part9.csv"
   const [qTimerArmed, setQTimerArmed] = useState(false)
   const effectiveMostrarResposta = isN400 ? true : mostrarResposta
+  const wakeLockRef = useRef(null) 
+  const btnAutoRef = useRef(null)
   
   useEffect(() => { localStorage.setItem("civic_db", dbFile) }, [dbFile])
   useEffect(() => { localStorage.setItem("civic_level", levelFilter) }, [levelFilter])
@@ -439,6 +441,36 @@ function App() {
   const timerProgressStyle = autoTimer && !mostrarResposta
     ? { animation: `timerSweep ${timerQ}s linear forwards` }
     : undefined   // ← undefined removes the style attr entirely, not {}
+  
+
+  // Ativa wake lock quando autoTimer liga, libera quando desliga
+  useEffect(() => {
+    if (!autoTimer) {
+      wakeLockRef.current?.release()
+      wakeLockRef.current = null
+      return
+    }
+
+    if ('wakeLock' in navigator) {
+      navigator.wakeLock.request('screen')
+        .then(lock => { wakeLockRef.current = lock })
+        .catch(err => console.warn('Wake Lock failed:', err))
+    }
+  }, [autoTimer])
+
+  // Reativa se o usuário volta para a aba (wake lock é liberado ao minimizar)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && autoTimer && 'wakeLock' in navigator) {
+        navigator.wakeLock.request('screen')
+          .then(lock => { wakeLockRef.current = lock })
+          .catch(err => console.warn('Wake Lock reacquire failed:', err))
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [autoTimer])
+
   return (
     <>
       <section id="center">
@@ -618,6 +650,7 @@ function App() {
                   className="btn-repeat"
                   ref={tipRepeat}
                   onClick={() => {
+                    setTimeout(() => btnAutoRef.current?.focus(), 50)
                     stop()
                     if (mostrarResposta) {
                       isRepeatingRef.current = true        // ← block timer
@@ -654,7 +687,7 @@ function App() {
                 </button>
               )}                        
               <button
-                ref={tipAuto}
+                ref={(el) => { tipAuto(el); btnAutoRef.current = el }}
                 key={`${indexAtual}`}
                 className={`btn-auto-timer ${autoTimer ? "btn-auto-timer--on" : ""}`}
                 style={timerProgressStyle}
