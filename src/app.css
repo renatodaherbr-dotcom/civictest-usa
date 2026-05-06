@@ -97,6 +97,13 @@ section#center textarea {
   width: 100%;
   margin-left: 3%;
 }
+
+.select-pass {
+  background-color: #e5e7eb;
+  color: #374151;
+  border-color: #d1d5db !important;
+}
+
 /* Botão PDF — pequeno, discreto, não desloca o select */
 .btn-pdf {
   display: inline-flex;

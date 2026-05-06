@@ -23,7 +23,7 @@ function App() {
   const [dados, setDados] = useState([])
   const [index, setIndex] = useState(0)
   const [mostrarResposta, setMostrarResposta] = useState(false)
-  const { updateLevel, getLevel } = useLevels()
+  const { levels, updateLevel, getLevel } = useLevels()
   const intervalRef = useRef(null)
   const timeoutRef  = useRef(null)
   const {
@@ -93,6 +93,15 @@ function App() {
     }    
   }  
 
+  const getQuestionKey = (value) => {
+    if (value && typeof value === "object") {
+      return String(value.id_number ?? value.idnumber ?? value.globalId ?? "").trim();
+    }
+    return String(value ?? "").trim();
+  };
+
+  const getQuestionLevel = (q) => getLevel(getQuestionKey(q));
+
   // ✅ 1st filter — section + subsection
   const perguntasFiltradas = useMemo(() =>
     dados.filter(
@@ -105,8 +114,13 @@ function App() {
   // ✅ 2nd filter — level on top of the first
   const perguntasVisiveis = useMemo(() => {
     if (levelFilter === "all") return perguntasFiltradas
-    return perguntasFiltradas.filter(q => getLevel(q.id_number) === levelFilter)
-  }, [perguntasFiltradas, levelFilter, getLevel])  // ← ) aqui!
+
+    if (levelFilter === "all-except-easy") {
+      return perguntasFiltradas.filter((q) => getQuestionLevel(q) !== "easy")
+    }
+
+    return perguntasFiltradas.filter((q) => getQuestionLevel(q) === levelFilter)
+  }, [perguntasFiltradas, levelFilter, getLevel])
 
   const indexAtual = shuffleMode
     ? shuffleOrder[shufflePos] ?? 0
@@ -115,7 +129,7 @@ function App() {
   const perguntaAtual = perguntasVisiveis[indexAtual]
 
   // ✅ questionId declarado antes de ser usado em texto_a
-  const questionId = perguntaAtual?.id_number || ""
+  const questionId = perguntaAtual ? getQuestionKey(perguntaAtual) : ""
   const editKey = `${dbFile}__${questionId}`
   const texto_q = perguntaAtual?.question ?? ""
   const texto_a_original = perguntaAtual?.answer ?? ""
@@ -576,7 +590,7 @@ function App() {
                 ref={tipLevel}
                 id="difficulty-select"
                 value={currentLevel}
-                onChange={(e) => updateLevel(questionId, e.target.value)}
+                onChange={(e) => updateLevel(getQuestionKey(perguntaAtual), e.target.value)}
                 className={`select-diff select-${currentLevel}`}>
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>

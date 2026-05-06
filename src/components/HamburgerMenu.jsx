@@ -82,9 +82,10 @@ export function HamburgerMenu({
   const [open, setOpen] = useState(false)
   const menuRef = useRef(null)
   const levelColor = {
-    easy:   "#16a34a",  // verde
-    medium: "#ca8a04",  // amarelo
-    hard:   "#dc2626",  // vermelho
+    "all-except-easy": "#6b7280",
+    easy: "#16a34a",
+    medium: "#ca8a04",
+    hard: "#dc2626",
   }
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -192,10 +193,10 @@ export function HamburgerMenu({
               onChange={(e) => {
                 onLevelChange(e.target.value)
                 setOpen(false)
-              }
-            }
+              }}
             >
               <option value="all">⭐ All levels</option>
+              <option value="all-except-easy">⚪ Except Easy</option>
               <option value="easy">🟢 Easy</option>
               <option value="medium">🟡 Medium</option>
               <option value="hard">🔴 Hard</option>
