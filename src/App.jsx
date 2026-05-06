@@ -583,7 +583,7 @@ function App() {
           )}          
 
           {/* COMBOBOX DE DIFICULDADE */}
-          {questionId && (
+          {questionId && !isN400 && (
             <div className="level-selector">
               <label htmlFor="difficulty-select" ref={tipLevel}>Level: </label>
               <select 

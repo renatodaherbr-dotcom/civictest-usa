@@ -98,12 +98,6 @@ section#center textarea {
   margin-left: 3%;
 }
 
-.select-pass {
-  background-color: #e5e7eb;
-  color: #374151;
-  border-color: #d1d5db !important;
-}
-
 /* Botão PDF — pequeno, discreto, não desloca o select */
 .btn-pdf {
   display: inline-flex;
@@ -458,7 +452,7 @@ section#center textarea {
   border-radius: 4px;
   border: 1px solid #ccc;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 1000;
   cursor: pointer;
   outline: none;
   margin: 0;                   /* Remove margem herdada */
@@ -479,6 +473,21 @@ section#center textarea {
   background-color: #fee2e2;
   color: #dc2626;
   border-color: #fecaca !important;
+}
+
+.select-diff option[value="easy"] {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.select-diff option[value="medium"] {
+  background-color: #fef9c3;
+  color: #ca8a04;
+}
+
+.select-diff option[value="hard"] {
+  background-color: #fee2e2;
+  color: #dc2626;
 }
 
 /* ── SPEECH BUTTONS ─── */
