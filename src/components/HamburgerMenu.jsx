@@ -192,7 +192,6 @@ export function HamburgerMenu({
               value={levelFilter}
               onChange={(e) => {
                 onLevelChange(e.target.value)
-                setOpen(false)
               }}
             >
               <option value="all">⭐ All levels</option>
@@ -237,7 +236,6 @@ export function HamburgerMenu({
               value={dbFile}
               onChange={(e) => {
                 onDbChange(e.target.value)
-                setOpen(false)
               }}
               className="hm-select"
             >

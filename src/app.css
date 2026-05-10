@@ -215,6 +215,48 @@ section#center textarea {
   bottom: calc(60% - 18px);
 }
 
+.ta-tools {
+  position: absolute;
+  right: 20px;
+  bottom: calc(60% - 18px);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.split-6040.mostrar-resposta .ta-tools {
+  bottom: calc(45% - 18px);
+}
+
+.ta-editable-hint {
+  position: static;
+  font-size: 0.7rem;
+  color: #aaa;
+  pointer-events: none;
+  z-index: auto;
+}
+
+.btn-full-answer {
+  background: rgba(100, 108, 255, 0.55);
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 1px 8px;
+  height: 24px;
+  font-size: 0.72rem;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-full-answer:hover {
+  background: #646cff;
+  color: white;
+  border-color: #646cff;
+}
+
 /* split-6040: resposta ocupa 40% → topo da resposta em 60% */
 .split-6040.mostrar-resposta .ta-editable-hint {
   bottom: calc(40% - 18px);
@@ -628,6 +670,69 @@ section#center textarea {
 .btn-repeat:not(:active) {
   background: var(--color-surface);   /* or whatever your default bg is */
   color: var(--color-text);
+}
+
+.answer-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 9999;
+}
+
+.answer-modal {
+  /* Change the width to be slightly smaller than the main app container (500px) */
+  width: min(460px, 90%); 
+  max-height: 85vh;
+  background: #c4f1b1;
+  border: 1px solid #d6d6d6;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.answer-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #ececec;
+  background: #c4f1b1;
+  color: #000000;
+}
+
+.answer-modal-close {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  min-width: 32px;
+  height: 28px;
+  cursor: pointer;
+  color: #555;
+}
+
+.answer-modal-close:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+.answer-modal-textarea {
+  width: 100%;
+  min-height: 320px;
+  height: 60vh;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  padding: 12px;
+  resize: vertical;
+  box-sizing: border-box;
+  outline: none;
 }
 
 /* ============================================

@@ -2,19 +2,26 @@ import { useState, useEffect, useCallback } from "react"
 
 const STORAGE_KEY = "civic_levels"
 
+const normalizeKey = (value) => String(value ?? "").trim()
+
 export function useLevels() {
-  // Inicialização lazy (roda só uma vez ao carregar o componente)
   const [levels, setLevels] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) return JSON.parse(stored)
+      const parsed = stored ? JSON.parse(stored) : {}
+
+      return Object.fromEntries(
+        Object.entries(parsed).filter(([k]) => {
+          const key = normalizeKey(k)
+          return key && key !== "undefined" && key !== "null"
+        })
+      )
     } catch (e) {
       console.error("Erro ao ler localStorage", e)
+      return {}
     }
-    return {}   // ← empty, easy is the default via getLevel fallback
   })
 
-  // Sempre que 'levels' mudar, salva no localStorage
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(levels))
@@ -23,23 +30,28 @@ export function useLevels() {
     }
   }, [levels])
 
-  // Função para atualizar uma pergunta específica
-  const updateLevel = (questionNumber, newLevel) => {
+  const updateLevel = useCallback((questionNumber, newLevel) => {
+    const key = normalizeKey(questionNumber)
+    if (!key) return
+
     setLevels(prev => {
       const updated = { ...prev }
+
       if (newLevel === "easy") {
-        delete updated[questionNumber]   // ← don't store the default
+        delete updated[key]
       } else {
-        updated[questionNumber] = newLevel
+        updated[key] = newLevel
       }
+
       return updated
     })
-  }
+  }, [])
 
-  // Função para obter o nível de uma pergunta (default "easy" se não existir)
   const getLevel = useCallback((questionNumber) => {
-    return levels[questionNumber] || "easy"
-  }, [levels])  // só muda quando levels muda de fato
+    const key = normalizeKey(questionNumber)
+    if (!key) return "easy"
+    return levels[key] || "easy"
+  }, [levels])
 
   return { levels, updateLevel, getLevel }
 }

@@ -23,6 +23,7 @@ function App() {
   const [dados, setDados] = useState([])
   const [index, setIndex] = useState(0)
   const [mostrarResposta, setMostrarResposta] = useState(false)
+  const [fullAnswersMap, setFullAnswersMap] = useState({})
   const { levels, updateLevel, getLevel } = useLevels()
   const intervalRef = useRef(null)
   const timeoutRef  = useRef(null)
@@ -37,6 +38,7 @@ function App() {
   const [timerA, setTimerA] = useState(() => Number(localStorage.getItem("civic_timerA")) || 5)
   const isRepeatingRef = useRef(false)
   const [timerTick, setTimerTick] = useState(0)
+  const [fullAnswerOpen, setFullAnswerOpen] = useState(false)
 
   const [shuffleMode, setShuffleMode] = useState(false)
   const [shuffleOrder, setShuffleOrder] = useState([])  // array of indices
@@ -78,6 +80,28 @@ function App() {
       })
       .catch(err => console.error("CSV load error:", err))
   }, [dbFile])
+
+  // Background loader for full answers
+  useEffect(() => {
+    fetch(`/bd_civic2.csv`) // <-- Put your actual bd1 filename here
+      .then(r => {
+        if (!r.ok) return;
+        return r.text();
+      })
+      .then(csvText => {
+        if (!csvText) return;
+        const results = Papa.parse(csvText, { header: true, delimiter: ";" });
+        const map = {};
+        results.data.forEach(row => {
+          const id = String(row.id_number ?? row.idnumber ?? "").trim();
+          if (id && row.answer) {
+            map[id] = row.answer; // Maps id_number -> full answer
+          }
+        });
+        setFullAnswersMap(map);
+      })
+      .catch(err => console.error("Error loading bd1 map:", err));
+  }, []); // Empty array means it runs once when the app starts
 
   const handleDbChange = (file) => {
     setDbFile(file)
@@ -127,13 +151,34 @@ function App() {
     : (perguntasVisiveis.length > 0 ? Math.min(index, perguntasVisiveis.length - 1) : 0)
 
   const perguntaAtual = perguntasVisiveis[indexAtual]
+  console.log("perguntaAtual keys:", Object.keys(perguntaAtual ?? {}))
+  console.log("perguntaAtual row:", perguntaAtual)  
 
-  // ✅ questionId declarado antes de ser usado em texto_a
+  // ✅ questionId declarado antes de ser usado
   const questionId = perguntaAtual ? getQuestionKey(perguntaAtual) : ""
-  const editKey = `${dbFile}__${questionId}`
   const texto_q = perguntaAtual?.question ?? ""
-  const texto_a_original = perguntaAtual?.answer ?? ""
-  const texto_a = getEdit(editKey) ?? texto_a_original  // ✅ sem erro
+
+  // short answer shown in card
+  const shortEditKey = `${dbFile}__${questionId}__short`
+  const texto_a_short_original =
+    perguntaAtual?.answer_short ??
+    perguntaAtual?.short_answer ??
+    perguntaAtual?.answer ??
+    ""
+
+  // full answer shown in popup
+  const fullEditKey = `${dbFile}__${questionId}__full`
+  const texto_a_full_original =
+    perguntaAtual?.answer_full ??
+    perguntaAtual?.full_answer ??
+    perguntaAtual?.answer_long ??
+    fullAnswersMap[questionId] ?? // <--- Add this lookup!
+    texto_a_short_original
+
+  const texto_a = getEdit(shortEditKey) ?? texto_a_short_original
+  const texto_a_full = getEdit(fullEditKey) ?? texto_a_full_original
+
+  const showFullButton = effectiveMostrarResposta
 
   // Funções de navegação
   const primeira = () => {
@@ -343,6 +388,10 @@ function App() {
       }
     }
   }, [autoTimer, indexAtual, mostrarResposta, timerQ, timerA, speaking, timerTick, isLast, isN400, qTimerArmed, autoVoice])
+
+  useEffect(() => {
+    setFullAnswerOpen(false)
+  }, [questionId, effectiveMostrarResposta])
 
   const tipPrev = useTippy("Previous question")
   const tipAnswer = useTippy(
@@ -609,18 +658,55 @@ function App() {
             readOnly
           />          
           <textarea
-            className={`ta-resposta ${!effectiveMostrarResposta ? "ta-hidden" : ""} ${getEdit(editKey) ? "ta-edited" : ""}`}
+            className={`ta-resposta ${!effectiveMostrarResposta ? "ta-hidden" : ""} ${getEdit(shortEditKey) ? "ta-edited" : ""}`}
             value={texto_a}
             readOnly={!effectiveMostrarResposta}
             tabIndex={effectiveMostrarResposta ? 0 : -1}
-            onChange={(e) => saveEdit(editKey, e.target.value)}
+            onChange={(e) => saveEdit(shortEditKey, e.target.value)}
           />
+
           {effectiveMostrarResposta && (
-            <span className="ta-editable-hint">✏️ editable</span>
+            <div className="ta-tools">
+              {/* <span className="ta-editable-hint">✏️ </span> */}
+              <span className="ta-editable-hint"></span>
+
+              {showFullButton && (
+                <button
+                  type="button"
+                  className="btn-full-answer"
+                  onClick={() => setFullAnswerOpen(true)}
+                >
+                  ⤢ 
+                </button>
+              )}
+            </div>
           )}
 
         </div>
-        
+
+        {fullAnswerOpen && (
+          <div className="answer-modal-backdrop" onClick={() => setFullAnswerOpen(false)}>
+            <div className="answer-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="answer-modal-header">
+                <strong>Full Answer</strong>
+                <button
+                  type="button"
+                  className="answer-modal-close"
+                  onClick={() => setFullAnswerOpen(false)}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <textarea
+                className="answer-modal-textarea"
+                value={texto_a_full}
+                onChange={(e) => saveEdit(fullEditKey, e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+
         {supported && (
           <div className="speech-btns">
 
@@ -646,10 +732,10 @@ function App() {
             </div>
 
             {/* Reset edit — only when needed */}
-            {effectiveMostrarResposta && getEdit(editKey) && (
+            {effectiveMostrarResposta && getEdit(shortEditKey) && (
               <button
                 className="btn-reset-edit"
-                onClick={() => clearEdit(editKey)}
+                onClick={() => clearEdit(shortEditKey)}
                 style={{ marginLeft: "4px" }}
               >
                 ↩ Reset
