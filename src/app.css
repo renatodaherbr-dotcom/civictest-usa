@@ -144,7 +144,10 @@ section#center textarea {
   height: 95%;
   background-color: #D5F2C3;
   transition: height 0.5s ease;
-  pointer-events: none;
+  /* Change 'none' to 'auto' so user can click and scroll */
+  pointer-events: auto; 
+  /* Force a vertical scrollbar when text gets too long */
+  overflow-y: auto; 
 }
 
 .ta-q-index {
@@ -874,14 +877,6 @@ section#center textarea {
     padding-bottom: 16px; 
   }
 
-  /* 1. Make text areas absorb ALL available middle space */
-  .ta-pergunta, .ta-resposta {
-    flex-grow: 1;
-    /* Optional: prevents them from getting too small */
-    min-height: 100px; 
-  }
-
-  /* 1. Make the wrapper flex and remove its strict height limits */
   .textarea-wrapper {
     flex-grow: 1 !important;
     height: auto !important;
@@ -891,11 +886,11 @@ section#center textarea {
     margin-bottom: 8px !important;
   }
 
-  /* 2. Text areas inside wrapper */
+  /* 1. Make text areas absorb ALL available middle space */
   .ta-pergunta, .ta-resposta {
-    /* Keep existing absolute positioning and percentage heights defined globally */
+      /* Keep existing absolute positioning and percentage heights defined globally */
   }
-    
+
   /* 2. Push the speech-btns down, which pushes the other two down with it */
   .speech-btns {
     margin-top: auto !important; 

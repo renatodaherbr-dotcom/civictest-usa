@@ -410,7 +410,7 @@ function App() {
       window.removeEventListener("keydown", handleKeyDown)
     }
   }, [fullAnswerOpen])
-  
+
   const tipPrev = useTippy("Previous question")
   const tipAnswer = useTippy(
     effectiveMostrarResposta ? "Go to next question" : "Show the answer"
@@ -609,7 +609,7 @@ function App() {
         {/* LABEL STATUS */}
         <div className="label-status">
           {perguntaAtual 
-            ? `Sec ${perguntaAtual.section.split('.')[0]}, Subsec ${perguntaAtual.sub_section.split('.')[0]}`
+            ? `Sec ${perguntaAtual.section.split('.')[0]}, ${perguntaAtual.sub_section.split('.')[0]}`
             : "Nenhuma Sec/Subsec"} 
           {" "}—{" "}
           <strong>
