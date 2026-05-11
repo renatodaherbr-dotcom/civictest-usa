@@ -158,11 +158,12 @@ function App() {
 
   // short answer shown in card
   const shortEditKey = `${dbFile}__${questionId}__short`
-  const texto_a_short_original =
-    perguntaAtual?.answer_short ??
-    perguntaAtual?.short_answer ??
-    perguntaAtual?.answer ??
-    ""
+  const texto_a_short_original = isN400 
+    ? perguntaAtual?.answer ?? ""
+    : perguntaAtual?.answer_short ??
+      perguntaAtual?.short_answer ??
+      perguntaAtual?.answer ??
+      ""
 
   // full answer shown in popup
   const fullEditKey = `${dbFile}__${questionId}__full`
@@ -176,7 +177,9 @@ function App() {
   const texto_a = getEdit(shortEditKey) ?? texto_a_short_original
   const texto_a_full = getEdit(fullEditKey) ?? texto_a_full_original
 
-  const showFullButton = effectiveMostrarResposta
+    // Only show the Full button if the answer is visible AND we are not on N400
+  // const showFullButton = effectiveMostrarResposta && !isN400
+  const showFullButton = effectiveMostrarResposta && !isN400 && dbFile === "bd_civic3.csv"
 
   // Funções de navegação
   const primeira = () => {
@@ -391,6 +394,23 @@ function App() {
     setFullAnswerOpen(false)
   }, [questionId, effectiveMostrarResposta])
 
+    // Close full answer popup with ESCAPE key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && fullAnswerOpen) {
+        setFullAnswerOpen(false)
+      }
+    }
+
+    if (fullAnswerOpen) {
+      window.addEventListener("keydown", handleKeyDown)
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [fullAnswerOpen])
+  
   const tipPrev = useTippy("Previous question")
   const tipAnswer = useTippy(
     effectiveMostrarResposta ? "Go to next question" : "Show the answer"

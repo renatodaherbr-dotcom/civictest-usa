@@ -494,7 +494,7 @@ section#center textarea {
   margin-left: auto;
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid #ccc;
+  border: 3px solid #545252;
   font-size: 0.75rem;
   font-weight: 1000;
   cursor: pointer;
@@ -504,19 +504,19 @@ section#center textarea {
 .select-easy {
   background-color: #dcfce7;
   color: #16a34a;
-  border-color: #bbf7d0 !important;
+  border-color: #3fe178 !important;
 }
 
 .select-medium {
   background-color: #fef9c3;
   color: #ca8a04;
-  border-color: #fef08a !important;
+  border-color: #e1cb2a !important;
 }
 
 .select-hard {
   background-color: #fee2e2;
   color: #dc2626;
-  border-color: #fecaca !important;
+  border-color: #f76c6c !important;
 }
 
 .select-diff option[value="easy"] {
@@ -851,3 +851,67 @@ section#center textarea {
   }
 }
 
+/* Samsung Galaxy A35 specific targeting */
+@media screen and (device-width: 412px) and (device-height: 892px) {
+  html, body, #root, .App {
+    height: 100dvh; 
+    min-height: 100dvh;
+    margin: 0;
+    padding: 0;
+  }
+
+  #center {
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    margin: 0 auto;
+    border-radius: 0;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    /* Ensure there's no bottom padding pushing things up too far */
+    padding-bottom: 16px; 
+  }
+
+  /* 1. Make text areas absorb ALL available middle space */
+  .ta-pergunta, .ta-resposta {
+    flex-grow: 1;
+    /* Optional: prevents them from getting too small */
+    min-height: 100px; 
+  }
+
+  /* 1. Make the wrapper flex and remove its strict height limits */
+  .textarea-wrapper {
+    flex-grow: 1 !important;
+    height: auto !important;
+    max-height: none !important; 
+    /* Ensures it doesn't push bottom buttons off-screen */
+    min-height: 300px !important; 
+    margin-bottom: 8px !important;
+  }
+
+  /* 2. Text areas inside wrapper */
+  .ta-pergunta, .ta-resposta {
+    /* Keep existing absolute positioning and percentage heights defined globally */
+  }
+    
+  /* 2. Push the speech-btns down, which pushes the other two down with it */
+  .speech-btns {
+    margin-top: auto !important; 
+  }
+
+  /* 3. Keep gaps between the bottom elements consistent */
+  .botao-section {
+    margin-top: 8px !important;
+  }
+
+  #center .search-container,
+  div.search-container {
+    gap: 5px !important;
+    padding: 10px 10px !important;
+    border-radius: 10px !important;
+    border-top: none !important;
+    margin-top: 8px !important;
+  }
+}
