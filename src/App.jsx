@@ -151,9 +151,7 @@ function App() {
     : (perguntasVisiveis.length > 0 ? Math.min(index, perguntasVisiveis.length - 1) : 0)
 
   const perguntaAtual = perguntasVisiveis[indexAtual]
-  console.log("perguntaAtual keys:", Object.keys(perguntaAtual ?? {}))
-  console.log("perguntaAtual row:", perguntaAtual)  
-
+  
   // ✅ questionId declarado antes de ser usado
   const questionId = perguntaAtual ? getQuestionKey(perguntaAtual) : ""
   const texto_q = perguntaAtual?.question ?? ""
@@ -404,6 +402,7 @@ function App() {
   const tipPdf = useTippy("Open Civic Test Study Guide.")
   const tipRepeat = useTippy("Repeat question / answer aloud")
   const tipAuto   = useTippy("Auto-advance with timer")
+  const tipFullAnswer = useTippy("Show full answer")
 
   const exportEdits = async () => {
     // Pega todas as chaves relevantes do app
@@ -672,11 +671,12 @@ function App() {
 
               {showFullButton && (
                 <button
+                  ref={tipFullAnswer}
                   type="button"
                   className="btn-full-answer"
                   onClick={() => setFullAnswerOpen(true)}
                 >
-                  ⤢ 
+                  F 
                 </button>
               )}
             </div>
