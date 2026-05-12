@@ -30,15 +30,22 @@
 }
 
 /* textarea de pergunta e resposta */
-section#center textarea {
-  width: calc(100% - 16px); /* ocupa toda a largura menos margens laterais */
-  margin: 5px 5px;          /* 4px topo/baixo, 8px laterais */
-  padding: 8px;             /* espaço interno */
+/* textarea/div de pergunta e resposta */
+section#center textarea,
+section#center .ta-pergunta,
+section#center .ta-resposta {
+  width: calc(100% - 16px);
+  margin: 5px 5px;          
+  padding: 8px;             
   font-size: var(--fs);
   border-radius: 6px;
   border: 1px solid #ccc;
-  resize: vertical;         /* usuário só pode mudar altura */
-  box-sizing: border-box;   /* inclui padding e borda no width */
+  resize: vertical;         
+  box-sizing: border-box;   
+  overflow-y: auto;
+  text-align: left;
+  color: #000000;
+  line-height: 1.4;      /* Required for divs to scroll like textareas */
 }
 #title-box{
   background: white;
@@ -291,12 +298,20 @@ section#center textarea {
 }
 
 /* bd_civic1 — 50/50 */
-.textarea-wrapper.split-5050.mostrar-resposta .ta-pergunta { height: 40%; }
-.textarea-wrapper.split-5050 .ta-resposta               { height: 60%; }
+.textarea-wrapper.split-5050.mostrar-resposta .ta-pergunta { 
+  height: calc(40% - 5px); 
+}
+.textarea-wrapper.split-5050 .ta-resposta{
+  height: calc(60% - 5px);
+}
 
 /* bd_civic2 — 60/40 */
-.textarea-wrapper.split-6040.mostrar-resposta .ta-pergunta { height: 60%; }
-.textarea-wrapper.split-6040 .ta-resposta               { height: 40%; }
+.textarea-wrapper.split-6040.mostrar-resposta .ta-pergunta { 
+  height: calc(60% - 5px); 
+}
+.textarea-wrapper.split-6040 .ta-resposta { 
+  height: calc(40% - 5px); 
+}
 
 /* ── Part 9: taller wrapper, three-area split ─────────── */
 .textarea-wrapper.split-part9 {
@@ -305,14 +320,14 @@ section#center textarea {
   max-height: calc(260px + 84px);
 }
 .textarea-wrapper.split-part9 .ta-pergunta {
-  height: 95%;
+  height: calc(100% - 5px); /* Used to be 95% */
 }
 .textarea-wrapper.split-part9.mostrar-resposta .ta-pergunta {
-  height: 40%;
+  height: calc(40% - 5px);
 }
 .textarea-wrapper.split-part9 .ta-resposta {
-  height: 60%;
-  bottom: 0;           /* flush to bottom — no My Answer below */
+  height: calc(60% - 5px);
+  bottom: 0; 
   transform: translateY(100%);
   opacity: 0;
   pointer-events: none;
@@ -861,6 +876,7 @@ section#center textarea {
     min-height: 100dvh;
     margin: 0;
     padding: 0;
+    overflow: hidden;
   }
 
   #center {
@@ -873,40 +889,39 @@ section#center textarea {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    /* Ensure there's no bottom padding pushing things up too far */
-    padding-bottom: 16px; 
+    padding-bottom: 0 !important; /* REMOVED padding to stop overflow */
+    overflow: hidden; /* Ensures child elements cannot break out */
   }
 
   .textarea-wrapper {
-    flex-grow: 1 !important;
-    height: auto !important;
+    flex: 1 1 auto !important;    /* Flexbox magic: grow to fill, but shrink if needed */
+    height: 0 !important;         /* Force it to rely purely on flex height */
     max-height: none !important; 
-    /* Ensures it doesn't push bottom buttons off-screen */
-    min-height: 300px !important; 
+    min-height: 200px !important; /* Safe minimum so text areas don't vanish */
     margin-bottom: 8px !important;
   }
 
-  /* 1. Make text areas absorb ALL available middle space */
-  .ta-pergunta, .ta-resposta {
-      /* Keep existing absolute positioning and percentage heights defined globally */
-  }
-
-  /* 2. Push the speech-btns down, which pushes the other two down with it */
+  /* Push the speech-btns down */
   .speech-btns {
     margin-top: auto !important; 
+    flex-shrink: 0 !important; /* Prevents buttons from squishing */
   }
 
   /* 3. Keep gaps between the bottom elements consistent */
   .botao-section {
     margin-top: 8px !important;
+    margin-bottom: 0 !important;
+    flex-shrink: 0 !important; /* Prevents buttons from squishing */
   }
 
-  #center .search-container,
-  div.search-container {
+  #center .search-container, div.search-container {
     gap: 5px !important;
     padding: 10px 10px !important;
     border-radius: 10px !important;
     border-top: none !important;
     margin-top: 8px !important;
+    height: 95px !important;       /* ← ADICIONAR ISSO AQUI TAMBÉM */
+    flex-shrink: 0 !important;
+    margin-bottom: 0 !important; /* Ensure no bottom margin pushes it off screen */    
   }
 }

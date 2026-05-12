@@ -671,17 +671,24 @@ function App() {
         {/* TEXT AREA */}
         <div className={`textarea-wrapper ${effectiveMostrarResposta ? "mostrar-resposta" : ""} ${isN400 ? "split-part9" : dbFile === "bd_civic3.csv" ? "split-6040" : "split-5050"}`}>
           <span className="ta-q-index">{questionId}</span>
-          <textarea
+          
+          {/* QUESTION: Read-only div that parses HTML tags */}
+          <div
+            key={`q-${questionId}`}
             className="ta-pergunta"
-            value={texto_q}
-            readOnly
+            dangerouslySetInnerHTML={{ __html: texto_q }}
           />          
-          <textarea
+          
+          {/* ANSWER: Editable div that acts like a rich-text editor */}
+          <div
+            key={`a-${questionId}`}
             className={`ta-resposta ${!effectiveMostrarResposta ? "ta-hidden" : ""} ${getEdit(shortEditKey) ? "ta-edited" : ""}`}
-            value={texto_a}
-            readOnly={!effectiveMostrarResposta}
+            contentEditable={effectiveMostrarResposta}
+            suppressContentEditableWarning={true}
             tabIndex={effectiveMostrarResposta ? 0 : -1}
-            onChange={(e) => saveEdit(shortEditKey, e.target.value)}
+            /* We use onBlur instead of onChange for contentEditable so the cursor doesn't jump */
+            onBlur={(e) => saveEdit(shortEditKey, e.currentTarget.innerHTML)}
+            dangerouslySetInnerHTML={{ __html: texto_a }}
           />
 
           {effectiveMostrarResposta && (

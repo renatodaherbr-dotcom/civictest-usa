@@ -4,7 +4,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  justify-content: center;      /* ← NOVO: Centraliza o conteúdo verticalmente */
+  gap: 8px;    
 
   margin-left: -16px;           /* cancela padding do #center */
   margin-right: -16px;
@@ -17,6 +18,8 @@
   border-bottom-left-radius: 14px;
   border-bottom-right-radius: 14px;
   box-sizing: border-box;
+  height: 95px;                 /* ← NOVO: Altura fixa para os dois estados (com/sem busca) */
+  overflow-y: auto;   
 }
 
 /* Container row — gives it a white bg so buttons always contrast */
@@ -39,11 +42,33 @@
   font-size: 0.85rem;
   width: 96%;
 }
+/* ← NOVO: Oculta a linha de hits quando vazia para centralizar os botões perfeitamente */
+.search-hits-row:empty {
+  display: none;
+}
 .search-nav-group {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  background-color: #f1f5f9; /* A light, cool gray/blue */
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 4px 8px;
+  border-radius: 8px;  
+}
+
+.search-nav-group button {
+  font-weight: 600;
+  color: #1e293b; /* Darker text for better contrast */
+  background-color: white; /* Make the buttons stand out from the gray background */
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.search-nav-group button:hover {
+  background-color: #e2e8f0;
+  border-color: #cbd5e1;
 }
 
 /* Base shared style */
@@ -120,8 +145,17 @@
   white-space: nowrap;
   overflow: visible;
   text-overflow: ellipsis;
-  max-width: 180px;
+  max-width: 33%;
   text-align: left;
+}
+
+.search-hits-row .search-term-label {
+  display: inline-block;     /* Required for max-width to work on a span */
+  max-width: 33%;            /* Restricts the width to 33% of the parent */
+  white-space: nowrap;       /* Prevents the text from breaking into a second line */
+  overflow: hidden;          /* Hides any text that overflows the 33% width */
+  text-overflow: ellipsis;   /* Adds the "..." at the end of the hidden text */
+  vertical-align: middle;    /* Keeps the span aligned with surrounding text or buttons */
 }
 
 /* ── CLEAR ──────────────────────────────────────── */
@@ -166,8 +200,8 @@
 }
 
 .search-count {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 800;
   color: #646cff;
   white-space: nowrap;
 }
