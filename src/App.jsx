@@ -10,6 +10,7 @@ import { useSpeech } from "./hooks/useSpeech"
 import { useTippy } from  "./hooks/useTips"
 import { HamburgerMenu } from "./components/HamburgerMenu"
 import { useEdits } from "./hooks/useEdits"
+import WritingTestPopup from './components/WritingTestPopup'
 
 function App() {
   const [dbFile, setDbFile] = useState(
@@ -51,6 +52,7 @@ function App() {
   const effectiveMostrarResposta = isN400 ? true : mostrarResposta
   const wakeLockRef = useRef(null) 
   const btnAutoRef = useRef(null)
+  const [isWritingTestOpen, setIsWritingTestOpen] = useState(false);
   
   useEffect(() => { localStorage.setItem("civic_db", dbFile) }, [dbFile])
   useEffect(() => { localStorage.setItem("civic_level", levelFilter) }, [levelFilter])
@@ -905,10 +907,12 @@ function App() {
 
         </div>
 
-        <SearchUI 
+        <SearchUI
           {...search}
           onStartTest={test.startTest}
+          extraAction={<WritingTestPopup voices={voices} selectedVoice={selectedVoice} />}
         />
+
         <TestUI
           {...test}
           speak={speak}
