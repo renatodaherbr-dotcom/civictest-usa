@@ -37,23 +37,26 @@ import './writingTestPopup.css';
 // ];
 
   const sentences = [
-    "Washington was the first President and Adams was the second President",
-    "Washington is the Father of Our Country and is on the one dollar bill",
-    "Lincoln was President during the Civil War and we have Memorial Day in May",
-    "Congress meets in Washington D.C. and we elect one hundred Senators to Congress",
-    "Citizens have the right to vote for the President in November",
-    "American Indians lived here first and people come to the United States to be free",
-    "People want freedom of speech and we pay taxes in the United States",
-    "The flag of the United States is red, white, and blue",
-    "The United States has fifty states and Alaska is the largest state",
-    "California has the most people and Delaware was the first state",
-    "Canada is north of the United States and Mexico is south of the United States",
-    "New York City was the first capital and the President lives in the White House",
-    "Independence Day is in July and we have Labor Day in September",
-    "Columbus Day is in October and Thanksgiving is in November",
-    "Flag Day is in June and Presidents' Day is in February",
-    "The United States can elect the President and the President lives in Washington"
+    "American Indians lived here first.",
+    "Washington was the first President and is the Father of Our Country.",
+    "Adams was the second President, and Lincoln was President during the Civil War.",
+    "Washington is on the one dollar bill.",
+    "New York City was the first capital of the United States.",
+    "The capital of the United States is Washington D.C., and the President lives in the White House.",
+    "Congress meets in Washington D.C., and has one hundred Senators.",
+    "Citizens have the right to vote for the President.",
+    "We pay taxes, and we can elect Senators to Congress.",
+    "People want to be free and come to the United States for freedom of speech.",
+    "The flag of the United States is red, white, and blue.",
+    "The United States has fifty states, and Delaware was the first state.",
+    "California has the most people, and Alaska is the largest state.",
+    "Canada is north of the United States, and Mexico is south of the United States.",
+    "Presidents' Day is in February, and Memorial Day is in May.",
+    "Flag Day is in June, and Independence Day is in July.",
+    "Labor Day is in September, and Columbus Day is in October.",
+    "Thanksgiving is in November, and we vote in November."
   ];
+
 function normalize(text) {
   return text
     .toLowerCase()
@@ -221,16 +224,58 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
     resetRound();
   };
 
+    // --- INÍCIO DA LÓGICA DE CORREÇÃO INTELIGENTE (LCS) ---
   const expWords = sentences[currentIndex].split(' ');
-  const actWords = userInput.trim() ? userInput.trim().split(/\s+/) : [];
+  const actWords = userInput.trim() ? userInput.trim().split(/\s+/).filter(w => w.length > 0) : [];
+
+  const isMatch = (actWord, expWord) => {
+    if (!actWord || !expWord) return false;
+    const a = normalizeWord(actWord);
+    const e = normalizeWord(expWord);
+    if (a === e) return true;
+    if (a === "50" && e === "fifty") return true;
+    if (a === "100" && e === "onehundred") return true;
+    return false;
+  };
+
+  // Matriz para o algoritmo de Subsequência Comum
+  const dp = Array(actWords.length + 1).fill(0).map(() => Array(expWords.length + 1).fill(0));
+  
+  for (let i = 1; i <= actWords.length; i++) {
+    for (let j = 1; j <= expWords.length; j++) {
+      if (isMatch(actWords[i - 1], expWords[j - 1])) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+  }
+
+  // Caminho de volta (Backtracking) para descobrir quais palavras bateram
+  const matchedActIndices = new Set();
+  let i = actWords.length;
+  let j = expWords.length;
+  
+  while (i > 0 && j > 0) {
+    if (isMatch(actWords[i - 1], expWords[j - 1])) {
+      matchedActIndices.add(i - 1);
+      i--;
+      j--;
+    } else if (dp[i - 1][j] > dp[i][j - 1]) {
+      i--;
+    } else {
+      j--;
+    }
+  }
+
+  const matchesCount = dp[actWords.length][expWords.length];
+  // --- FIM DA LÓGICA DE CORREÇÃO ---
 
   return (
     <>
       <button
         type="button"
         onClick={openPopup}
-        // Coloque aqui a exata mesma classe que o seu botão "Search" ou "Test Simulation" usa.
-        // Pelo seu app.css, o botão Simulation usa "btn-start-test".
         className="btn-start-test" 
       >
         📝 Writing Test
@@ -341,23 +386,13 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
                     <p className="writing-test-label">Your typing:</p>
 
                     <div className="writing-test-word-list">
-                      {actWords.map((word, i) => {
-                        const expMatch = expWords[i] || '';
-
-                        const isAlt =
-                          (normalizeWord(word) === '50' &&
-                            normalizeWord(expMatch) === 'fifty') ||
-                          (normalizeWord(word) === '100' &&
-                            normalizeWord(expMatch) === 'onehundred');
-
-                        const match =
-                          expMatch &&
-                          (normalizeWord(word) === normalizeWord(expMatch) ||
-                            isAlt);
+                      {actWords.map((word, index) => {
+                        // USA O ALGORITMO NOVO AQUI
+                        const match = matchedActIndices.has(index);
 
                         return (
                           <span
-                            key={`${word}-${i}`}
+                            key={`${word}-${index}`}
                             className={`writing-test-word ${
                               match
                                 ? 'writing-test-word--ok'
@@ -369,7 +404,7 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
                         );
                       })}
 
-                      {actWords.length < expWords.length && (
+                      {matchesCount < expWords.length && (
                         <span className="writing-test-incomplete">
                           (...incomplete)
                         </span>
