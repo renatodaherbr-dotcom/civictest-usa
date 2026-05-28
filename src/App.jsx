@@ -12,6 +12,11 @@ import { HamburgerMenu } from "./components/HamburgerMenu"
 import { useEdits } from "./hooks/useEdits"
 import WritingTestPopup from './components/WritingTestPopup'
 
+function stripHtmlTags(text) {
+  if (!text) return "";
+  return text.replace(/<\/?[^>]+(>|$)/g, "");
+}
+
 function App() {
   const [dbFile, setDbFile] = useState(
     () => localStorage.getItem("civic_db") || "bd_civic2.csv"   // ← ADD
@@ -296,7 +301,7 @@ function App() {
     if (test.testActive) return
     if (autoVoice && texto_q) {
       stop()
-      speak(texto_q, "q")
+      speak(stripHtmlTags(texto_q), "q") // ← AQUI
     }
   }, [autoVoice, texto_q])
 
@@ -305,7 +310,7 @@ function App() {
     if (!effectiveMostrarResposta) return
     if (test.testActive) return
     if (autoVoice && texto_a) {
-      speakQueued(texto_a, "a")
+      speakQueued(stripHtmlTags(texto_a), "a") // ← AQUI
     }
   }, [effectiveMostrarResposta, autoVoice, texto_a, test.testActive])
 
@@ -744,7 +749,7 @@ function App() {
               <button
                 ref={tipQ}
                 className={`btn-speech ${speakingId === "q" ? "btn-speech-active" : ""}`}
-                onClick={() => speakingId === "q" ? stop() : speak(texto_q, "q")}
+                onClick={() => speakingId === "q" ? stop() : speak(stripHtmlTags(texto_q), "q")} // ← AQUI
               >
                 {speakingId === "q" ? "⏹ Q" : "🔊 Q"}
               </button>
@@ -753,7 +758,7 @@ function App() {
                 <button
                   ref={tipA}
                   className={`btn-speech ${speakingId === "a" ? "btn-speech-active" : ""}`}
-                  onClick={() => speakingId === "a" ? stop() : speak(texto_a, "a")}
+                  onClick={() => speakingId === "a" ? stop() : speak(stripHtmlTags(texto_a), "a")} // ← AQUI
                 >
                   {speakingId === "a" ? "⏹ A" : "🔊 A"}
                 </button>
@@ -794,7 +799,8 @@ function App() {
                   stop()
                     if (mostrarResposta) {
                       isRepeatingRef.current = true        // ← block timer
-                      speak(texto_q, "q")
+                      // speak(texto_q, "q")
+                      speak(stripHtmlTags(texto_q), "q")
                       const checkDone = setInterval(() => {
                         if (!window.speechSynthesis.speaking) {
                           clearInterval(checkDone)
@@ -813,7 +819,8 @@ function App() {
                       }, 200)
                     } else {
                       isRepeatingRef.current = true        // ← block timer
-                      speak(texto_q, "q")
+                      // speak(texto_q, "q")
+                      speak(stripHtmlTags(texto_q), "q")
                       const checkDone = setInterval(() => {
                         if (!window.speechSynthesis.speaking) {
                           clearInterval(checkDone)

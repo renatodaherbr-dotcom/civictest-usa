@@ -168,17 +168,35 @@ export function HamburgerMenu({
                   <input className="timer-input" type="number" min="1" max="60"
                     value={timerQ} 
                     onChange={(e) => {
-                      onTimerQ(Number(e.target.value))
-                      localStorage.setItem("civic_timerQ", e.target.value)
-                      }} />s
+                      const val = e.target.value;
+                      // Se o usuário limpar o campo, guarda string vazia
+                      onTimerQ(val === "" ? "" : Number(val));
+                      if (val !== "") localStorage.setItem("civic_timerQ", val);
+                    }} 
+                    onBlur={(e) => {
+                      // Quando sair do campo, se estiver vazio ou inválido, volta para o padrão
+                      if (!e.target.value || Number(e.target.value) < 1) {
+                        onTimerQ(5);
+                        localStorage.setItem("civic_timerQ", "5");
+                      }
+                    }}
+                  />s
                 </label>
                 <label className="timer-label">A
                   <input className="timer-input" type="number" min="1" max="60"
                     value={timerA} 
                     onChange={(e) => {
-                      onTimerA(Number(e.target.value))
-                      localStorage.setItem("civic_timerA", e.target.value)
-                    }} />s
+                      const val = e.target.value;
+                      onTimerA(val === "" ? "" : Number(val));
+                      if (val !== "") localStorage.setItem("civic_timerA", val);
+                    }} 
+                    onBlur={(e) => {
+                      if (!e.target.value || Number(e.target.value) < 1) {
+                        onTimerA(5);
+                        localStorage.setItem("civic_timerA", "5");
+                      }
+                    }}
+                  />s
                 </label>
               </div>
             </div>
@@ -275,16 +293,28 @@ export function HamburgerMenu({
           
           <div className="hm-divider" />
 
-          <a
-            className="hm-item hm-item--link"
-            href="/USCIS-2025-Civics-Test-Study-Guide.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
-          >
-            <span className="hm-icon"><IconFile /></span>
-            <span>Study Guide PDF</span>
-          </a>
+          <div className="hm-item hm-item--select">
+            <div className="hm-item-head">
+              <span className="hm-icon"><IconFile /></span>
+              <span className="hm-label">Study Guides (PDF)</span>
+            </div>
+            
+            <select
+              className="hm-select"
+              value=""
+              onChange={(e) => {
+                if (e.target.value) {
+                  window.open(e.target.value, "_blank", "noopener,noreferrer")
+                  setOpen(false) // Fecha o menu hamburger após a seleção
+                }
+              }}
+            >
+              <option value="" disabled>Select a PDF to open...</option>
+              <option value="/USCIS-2025-Civics-Test-Study-Guide.pdf">1. Civics Test Study Guide</option>
+              <option value="/USCIS-reading_vocab.pdf">2. Reading Vocabulary Guide</option>
+              <option value="/USCIS-writing_vocab.pdf">3. Writing Vocabulary Guide</option>
+            </select>
+          </div>
 
           <a
             className="hm-item hm-item--link"
