@@ -83,12 +83,12 @@
 }
 .btn-bottom-action:active { transform: scale(0.97); }
 
-.btn-bottom-action:first-child {
+.btn-bottom-action:nth-child(-n+2) {
   color: white;
   background: #646cff;
   box-shadow: 0 2px 8px rgba(100, 108, 255, 0.35);
 }
-.btn-bottom-action:first-child:hover {
+.btn-bottom-action:nth-child(-n+2):hover {
   background: #4e56d6;
   box-shadow: 0 4px 12px rgba(100, 108, 255, 0.45);
 }

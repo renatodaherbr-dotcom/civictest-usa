@@ -1,6 +1,6 @@
 import "./search.css"
 import { useTippy } from  "../hooks/useTips"
-import WritingTestPopup from './WritingTestPopup'
+// import WritingTestPopup from './WritingTestPopup'
 
 export function SearchUI({
   searchOpen, setSearchOpen,
@@ -12,7 +12,7 @@ export function SearchUI({
   searchNext, searchPrev,
   searchInQ, searchInA,
   toggleSearchInQ, toggleSearchInA,
-  onStartTest, levelFilter, setLevelFilter
+  onStartTest, onStartWritingTest, levelFilter, setLevelFilter
 }) {
   const tipTest = useTippy("Test your knowlodge with random questions.")
   const tipLevel = useTippy("Filter question by difficulty level.")  
@@ -32,7 +32,12 @@ export function SearchUI({
             📝 Test Simulation
           </button>
           
-          <WritingTestPopup />
+          {/* <WritingTestPopup /> */}
+          <button className="btn-bottom-action btn-search"
+            onClick={onStartWritingTest}
+          >
+            📝 Writing Test
+          </button>          
 
           <button className="btn-bottom-action btn-search" 
             onClick={() => setSearchOpen(true)}

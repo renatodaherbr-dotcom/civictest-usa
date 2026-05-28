@@ -1,61 +1,27 @@
 import React, { useEffect, useRef, useState } from 'react';
+import Papa from "papaparse";
 import './writingTestPopup.css';
 
-// const sentences = [
-//   'Washington was the first President',
-//   'Adams was the second President',
-//   'Lincoln was President during the Civil War',
-//   'Washington is the Father of Our Country',
-//   'The capital of the United States is Washington D.C.',
-//   'Congress meets in Washington D.C.',
-//   'We elect Senators to Congress',
-//   'Citizens have the right to vote',
-//   'We vote for President in November',
-//   'American Indians lived here first',
-//   'People want to be free and have freedom of speech',
-//   'The flag is red white and blue',
-//   'The United States has fifty states',
-//   'Alaska is the largest state',
-//   'California has the most people',
-//   'Canada is north of the United States',
-//   'Mexico is south of the United States',
-//   'Delaware was the first state',
-//   'New York City was the first capital',
-//   'We pay taxes',
-//   'Washington is on the one dollar bill',
-//   "Presidents' Day is in February",
-//   'Memorial Day is in May',
-//   'Flag Day is in June',
-//   'Independence Day is in July',
-//   'Labor Day is in September',
-//   'Columbus Day is in October',
-//   'Thanksgiving is in November',
-//   'The President lives in the White House',
-//   'Congress has one hundred Senators',
-//   'People come to the United States',
-//   'The United States can elect the President',
-// ];
-
-  const sentences = [
-    "American Indians lived here first.",
-    "Washington was the first President and is the Father of Our Country.",
-    "Adams was the second President, and Lincoln was President during the Civil War.",
-    "Washington is on the one dollar bill.",
-    "New York City was the first capital of the United States.",
-    "The capital of the United States is Washington D.C., and the President lives in the White House.",
-    "Congress meets in Washington D.C., and has one hundred Senators.",
-    "Citizens have the right to vote for the President.",
-    "We pay taxes, and we can elect Senators to Congress.",
-    "People want to be free and come to the United States for freedom of speech.",
-    "The flag of the United States is red, white, and blue.",
-    "The United States has fifty states, and Delaware was the first state.",
-    "California has the most people, and Alaska is the largest state.",
-    "Canada is north of the United States, and Mexico is south of the United States.",
-    "Presidents' Day is in February, and Memorial Day is in May.",
-    "Flag Day is in June, and Independence Day is in July.",
-    "Labor Day is in September, and Columbus Day is in October.",
-    "Thanksgiving is in November, and we vote in November."
-  ];
+const sentences = [
+  "American Indians lived here first.",
+  "Washington was the first President and is the Father of Our Country.",
+  "Adams was the second President, and Lincoln was President during the Civil War.",
+  "Washington is on the one dollar bill.",
+  "New York City was the first capital of the United States.",
+  "The capital of the United States is Washington D.C., and the President lives in the White House.",
+  "Congress meets in Washington D.C., and has one hundred Senators.",
+  "Citizens have the right to vote for the President.",
+  "We pay taxes, and we can elect Senators to Congress.",
+  "People want to be free and come to the United States for freedom of speech.",
+  "The flag of the United States is red, white, and blue.",
+  "The United States has fifty states, and Delaware was the first state.",
+  "California has the most people, and Alaska is the largest state.",
+  "Canada is north of the United States, and Mexico is south of the United States.",
+  "Presidents' Day is in February, and Memorial Day is in May.",
+  "Flag Day is in June, and Independence Day is in July.",
+  "Labor Day is in September, and Columbus Day is in October.",
+  "Thanksgiving is in November, and we vote in November."
+];
 
 function normalize(text) {
   return text
@@ -79,23 +45,66 @@ function getRandomIndex(max, exclude = -1) {
   return next;
 }
 
-export default function WritingTestPopup({ voices, selectedVoice }) {
+export default function WritingTestPopup({
+  voices,
+  selectedVoice,
+  isOpenExternally,
+  onCloseExternal,
+  writingMode = "sentences",
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [history, setHistory] = useState([]);
   const [userInput, setUserInput] = useState('');
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [isWordMode, setIsWordMode] = useState(false);
+  const [activeSentences, setActiveSentences] = useState(sentences);
 
   const textareaRef = useRef(null);
   const audioTimeoutRef = useRef(null);
   const nextBtnRef = useRef(null);
   const writeAgainBtnRef = useRef(null);  
 
+  useEffect(() => {
+    if (!isOpenExternally) return
+
+    setIsOpen(true)
+    setUserInput('')
+    setShowResult(false)
+    setIsCorrect(false)
+    setIsWordMode(writingMode === "words")
+
+    if (writingMode === "words") {
+      fetch("/bd_writing_vocab.csv")
+        .then(r => r.text())
+        .then(csvText => {
+          const results = Papa.parse(csvText, { header: true, delimiter: ";" })
+          const loadedWords = results.data
+            .filter(row => row.answer)
+            .map(row => row.answer.trim())
+
+          if (loadedWords.length > 0) {
+            const rnd = getRandomIndex(loadedWords.length, -1)
+            setActiveSentences(loadedWords)
+            setCurrentIndex(rnd)
+            setHistory([rnd])
+          }
+        })
+        .catch(e => console.error("Erro carregando vocab", e))
+    } else {
+      const rnd = getRandomIndex(sentences.length, -1)
+      setActiveSentences(sentences)
+      setCurrentIndex(rnd)
+      setHistory([rnd])
+    }
+  }, [isOpenExternally, writingMode])
+  // ==========================================================
+
   const playAudio = () => {
     window.speechSynthesis.cancel();
     
-    const utterance = new SpeechSynthesisUtterance(sentences[currentIndex]);
+    const utterance = new SpeechSynthesisUtterance(activeSentences[currentIndex]);
     utterance.lang = 'en-US';
     utterance.rate = 0.85;
 
@@ -123,8 +132,9 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
   };
 
   const openPopup = () => {
-    const randomIndex = getRandomIndex(sentences.length, currentIndex);
-
+    const randomIndex = getRandomIndex(sentences.length, -1);
+    setIsWordMode(false);
+    setActiveSentences(sentences);
     setCurrentIndex(randomIndex);
     setHistory([randomIndex]);
     setUserInput('');
@@ -137,6 +147,9 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
     clearTimeout(audioTimeoutRef.current);
     window.speechSynthesis.cancel();
     setIsOpen(false);
+    setIsWordMode(false);
+    setActiveSentences(sentences);
+    if (onCloseExternal) onCloseExternal();  // sempre reseta o App
   };
 
   useEffect(() => {
@@ -163,21 +176,61 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
   }, []);
 
   // Fechar o popup ao pressionar a tecla ESC
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        closePopup();
-      }
-    };
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (!isOpen) return;
 
-    if (isOpen) {
-      window.addEventListener('keydown', handleKeyDown);
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closePopup();
+      return;
     }
 
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen]);  
+    if (e.key === 'Enter') {
+      e.preventDefault();
+
+      if (!showResult) {
+        handleCheck();
+      } else {
+        handleNext();
+      }
+
+      return;
+    }
+
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      handleNext();
+      return;
+    }
+
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      handleBack();
+      return;
+    }
+
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+
+      if (!showResult) {
+        playAudio();
+      } else {
+        handleWriteAgain();
+      }
+
+      return;
+    }
+  };
+
+  if (isOpen) {
+    window.addEventListener('keydown', handleKeyDown);
+  }
+
+  return () => {
+    window.removeEventListener('keydown', handleKeyDown);
+  };
+}, [isOpen, showResult, currentIndex, userInput, activeSentences, history, selectedVoice, voices]);
 
     // Assim que mostrar o resultado, foca no botão correto
   useEffect(() => {
@@ -191,7 +244,7 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
   }, [showResult, isCorrect]);
 
   const handleCheck = () => {
-    const expected = normalize(sentences[currentIndex]);
+    const expected = normalize(activeSentences[currentIndex]);
     const actual = normalize(userInput);
     const alternativeActual = actual
       .replace(/\b50\b/g, 'fifty')
@@ -202,7 +255,7 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
   };
 
   const handleNext = () => {
-    const nextIndex = (currentIndex + 1) % sentences.length;
+    const nextIndex = (currentIndex + 1) % activeSentences.length;
 
     setHistory((prev) => [...prev, nextIndex]);
     setCurrentIndex(nextIndex);
@@ -225,7 +278,8 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
   };
 
     // --- INÍCIO DA LÓGICA DE CORREÇÃO INTELIGENTE (LCS) ---
-  const expWords = sentences[currentIndex].split(' ');
+  const currentSentence = activeSentences[currentIndex] ?? '';
+  const expWords = currentSentence.split(' ');
   const actWords = userInput.trim() ? userInput.trim().split(/\s+/).filter(w => w.length > 0) : [];
 
   const isMatch = (actWord, expWord) => {
@@ -269,17 +323,26 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
   }
 
   const matchesCount = dp[actWords.length][expWords.length];
+  const popupTitle = isWordMode ? "Writing Test (WORDS only)" : "Writing Test (SENTENCES)";
+  const correctLabel = isWordMode ? "Correct word" : "Correct sentence";
+  const nextLabel = isWordMode ? "Next Word" : "Next Sentence";
+  const counterLabel = isWordMode ? "Word" : "Sentence";
+  const placeholderText = isWordMode
+    ? "Type the word you heard..."
+    : "Type the sentence you heard...";  
   // --- FIM DA LÓGICA DE CORREÇÃO ---
 
   return (
     <>
-      <button
-        type="button"
-        onClick={openPopup}
-        className="btn-start-test" 
-      >
-        📝 Writing Test
-      </button>
+      {onCloseExternal == null && (
+        <button
+          type="button"
+          onClick={openPopup}
+          className="btn-start-test" 
+        >
+          📝 Writing Test
+        </button>
+      )}
 
       {isOpen && (
         <div className="writing-test-overlay" onClick={closePopup}>
@@ -289,9 +352,7 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
           >
             {/* WINDOW TITLE HEADER */}
             <div className="writing-test-header">
-              <h2 className="writing-test-title" >
-                📝 Writing Test
-              </h2>
+              <h2 className="writing-test-title">{popupTitle}</h2>
               <button
                 type="button"
                 onClick={closePopup}
@@ -305,7 +366,7 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
 
             <div className="writing-test-toolbar">
               <span className="writing-test-counter">
-                Sentence {currentIndex + 1} of {sentences.length}
+                {counterLabel} {currentIndex + 1} of {activeSentences.length}
               </span>
 
               <div className="writing-test-toolbar-actions">
@@ -332,7 +393,7 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
               ref={textareaRef}
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
-              placeholder="Type the sentence you heard..."
+              placeholder={placeholderText}
               className="writing-test-textarea"
               disabled={showResult}
             />
@@ -411,10 +472,10 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
                       )}
                     </div>
 
-                    <p className="writing-test-label">Correct sentence:</p>
+                    <p className="writing-test-label">{correctLabel}</p>
 
                     <div className="writing-test-correct-box">
-                      {sentences[currentIndex]}
+                      {activeSentences[currentIndex]}
                     </div>
                   </div>
                 )}
@@ -435,7 +496,7 @@ export default function WritingTestPopup({ voices, selectedVoice }) {
                     onClick={handleNext}
                     className="writing-test-next-btn"
                   >
-                    Next Sentence ➜
+                    {nextLabel} ➜
                   </button>
                 </div>
               </>

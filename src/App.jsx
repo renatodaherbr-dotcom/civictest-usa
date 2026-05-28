@@ -57,8 +57,22 @@ function App() {
   const effectiveMostrarResposta = isN400 ? true : mostrarResposta
   const wakeLockRef = useRef(null) 
   const btnAutoRef = useRef(null)
-  const [isWritingTestOpen, setIsWritingTestOpen] = useState(false);
-  
+  const [isWritingTestOpen, setIsWritingTestOpen] = useState(false)
+  const [isWritingModeChooserOpen, setIsWritingModeChooserOpen] = useState(false)
+  const [writingMode, setWritingMode] = useState("sentences")
+
+  const openWritingModeChooser = () => {
+    setIsWritingModeChooserOpen(true)
+  }
+
+  const startWritingTest = (mode) => {
+    setWritingMode(mode)
+    setIsWritingModeChooserOpen(false)
+    setIsWritingTestOpen(true)
+  }  
+  const closeWritingModeChooser = () => {
+    setIsWritingModeChooserOpen(false)
+  }
   useEffect(() => { localStorage.setItem("civic_db", dbFile) }, [dbFile])
   useEffect(() => { localStorage.setItem("civic_level", levelFilter) }, [levelFilter])
   // ← ADD — persist voice (only when selected)
@@ -588,7 +602,6 @@ function App() {
           
         </div>
 
-        {/* SELECTORS */}
         {/* DATABASE SELECTOR */}
         <div className="db-row">
           {!isN400 && (
@@ -610,8 +623,6 @@ function App() {
               ))}
           </select>
         </div>
-
-        {/* BARRA DE STATUS + COMBOBOX LEVEL */}
 
         {/* LABEL STATUS */}
         <div className="label-status">
@@ -914,10 +925,59 @@ function App() {
 
         </div>
 
-        <SearchUI
-          {...search}
+        {isWritingModeChooserOpen && (
+          <div
+            className="writing-mode-overlay"
+            onClick={closeWritingModeChooser}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="writing-mode-title"
+          >
+            <div
+              className="writing-mode-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 id="writing-mode-title" className="writing-mode-title">
+                Choose writing mode
+              </h3>
+
+              <p className="writing-mode-subtitle">
+                Select how you want to practice.
+              </p>
+
+              <div className="writing-mode-actions">
+                <button
+                  type="button"
+                  className="writing-mode-btn"
+                  onClick={() => startWritingTest("sentences")}
+                >
+                  Sentence mode
+                </button>
+
+                <button
+                  type="button"
+                  className="writing-mode-btn"
+                  onClick={() => startWritingTest("words")}
+                >
+                  Word mode
+                </button>
+              </div>
+
+              <button
+                type="button"
+                className="writing-mode-cancel"
+                onClick={closeWritingModeChooser}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        <SearchUI 
+          {...search} 
           onStartTest={test.startTest}
-          extraAction={<WritingTestPopup voices={voices} selectedVoice={selectedVoice} />}
+          onStartWritingTest={openWritingModeChooser}
         />
 
         <TestUI
@@ -930,6 +990,14 @@ function App() {
           autoVoice={autoVoice}      
           setAutoVoice={setAutoVoice}
         />
+        {/* ✅ ADICIONE AQUI — fora do SearchUI, direto no return */}
+        <WritingTestPopup
+          voices={voices}
+          selectedVoice={selectedVoice}
+          isOpenExternally={isWritingTestOpen}
+          onCloseExternal={() => setIsWritingTestOpen(false)}
+          writingMode={writingMode}
+        />      
 
       </section>
 

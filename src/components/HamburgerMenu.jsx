@@ -254,6 +254,7 @@ export function HamburgerMenu({
               value={dbFile}
               onChange={(e) => {
                 onDbChange(e.target.value)
+                setOpen(false)
               }}
               className="hm-select"
             >

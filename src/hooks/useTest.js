@@ -34,7 +34,6 @@ export function useTest() {   // ← sem parâmetro
           globalId: String(i + 1)
         }))
       setTestDados(merged)
-      //console.log("merged[0]:", merged[0])  // ← vê question, answer, short_answer      
     })
   }, [])
 

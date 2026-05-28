@@ -755,6 +755,73 @@ section#center .ta-resposta {
   outline: none;
 }
 
+.writing-mode-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 9999;
+}
+
+.writing-mode-modal {
+  width: min(360px, 92vw);
+  background: var(--card-bg, #f3f4f6);
+  color: var(--text-color, #111827);
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 14px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.18);
+  padding: 16px;
+}
+
+.writing-mode-title {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.writing-mode-subtitle {
+  margin: 0 0 14px;
+  font-size: 0.92rem;
+  opacity: 0.8;
+}
+
+.writing-mode-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.writing-mode-btn,
+.writing-mode-cancel {
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #d1d5db);
+  background: var(--btn-bg, #ffffff);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.writing-mode-btn {
+  background: var(--btn-bg, #bbbef8);
+}
+
+.writing-mode-btn:hover,
+.writing-mode-cancel:hover {
+  filter: brightness(0.78);
+  color: white;
+  background: #5059f6;
+  box-shadow: 0 2px 8px rgba(100, 108, 255, 0.35);  
+}
+
+.writing-mode-cancel {
+  width: 100%;
+}
+
 /* ============================================
    RESPONSIVE — width breakpoints
    ============================================ */
