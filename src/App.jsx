@@ -45,6 +45,8 @@ function App() {
   const isRepeatingRef = useRef(false)
   const [timerTick, setTimerTick] = useState(0)
   const [fullAnswerOpen, setFullAnswerOpen] = useState(false)
+  const answerRef = useRef(null)
+  const isEditingAnswerRef = useRef(false)  
 
   const [shuffleMode, setShuffleMode] = useState(false)
   const [shuffleOrder, setShuffleOrder] = useState([])  // array of indices
@@ -60,6 +62,7 @@ function App() {
   const [isWritingTestOpen, setIsWritingTestOpen] = useState(false)
   const [isWritingModeChooserOpen, setIsWritingModeChooserOpen] = useState(false)
   const [writingMode, setWritingMode] = useState("sentences")
+  const [editVersion, setEditVersion] = useState(0)
 
   const openWritingModeChooser = () => {
     setIsWritingModeChooserOpen(true)
@@ -179,28 +182,46 @@ function App() {
 
   // short answer shown in card
   const shortEditKey = `${dbFile}__${questionId}__short`
-  const texto_a_short_original = isN400 
+  const fullEditKey = `${dbFile}__${questionId}__full`
+
+  const texto_a_short_original = isN400
     ? perguntaAtual?.answer ?? ""
     : perguntaAtual?.answer_short ??
       perguntaAtual?.short_answer ??
       perguntaAtual?.answer ??
       ""
 
-  // full answer shown in popup
-  const fullEditKey = `${dbFile}__${questionId}__full`
   const texto_a_full_original =
     perguntaAtual?.answer_full ??
     perguntaAtual?.full_answer ??
     perguntaAtual?.answer_long ??
-    fullAnswersMap[questionId] ?? // <--- Add this lookup!
+    fullAnswersMap[questionId] ??
     texto_a_short_original
 
-  const texto_a = getEdit(shortEditKey) ?? texto_a_short_original
-  const texto_a_full = getEdit(fullEditKey) ?? texto_a_full_original
+  const texto_a_editado_html = getEdit(shortEditKey)
+  const texto_a_full_editado = getEdit(fullEditKey)
 
-    // Only show the Full button if the answer is visible AND we are not on N400
+  const texto_a =
+    texto_a_editado_html ?? texto_a_short_original
+
+  const texto_a_full =
+    stripHtmlTags(
+      texto_a_full_editado ??
+      texto_a_editado_html ??
+      texto_a_full_original ??
+      texto_a_short_original
+    )
+
+  // Only show the Full button if the answer is visible AND we are not on N400
   // const showFullButton = effectiveMostrarResposta && !isN400
   const showFullButton = effectiveMostrarResposta && !isN400 && dbFile === "bd_civic3.csv"
+
+  useEffect(() => {
+    if (!answerRef.current) return
+    if (isEditingAnswerRef.current) return
+
+    answerRef.current.innerHTML = texto_a || ""
+  }, [questionId, texto_a])
 
   // Funções de navegação
   const primeira = () => {
@@ -254,7 +275,12 @@ function App() {
     setQTimerArmed(false)
   }
 
-  const search = useSearch(perguntasVisiveis, setIndex, getEdit)
+  // const search = useSearch(perguntasVisiveis, setIndex, getEdit)
+  const perguntasBusca = useMemo(() => {
+    return perguntasVisiveis.map(d => ({ ...d, dbFile }))
+  }, [perguntasVisiveis, dbFile])
+
+  const search = useSearch(perguntasBusca, setIndex, getEdit, editVersion)
 
   const handleAnswer = () => {
     if (!effectiveMostrarResposta) {
@@ -580,6 +606,12 @@ function App() {
         {/* ← Hamburger — fica no canto superior direito do card */}
         <HamburgerMenu
           dbFile={dbFile}
+          dbLabel={
+            dbFile === "bd_civic2.csv" ? "F" :
+            dbFile === "bd_civic3.csv" ? "S" :
+            dbFile === "bd_n400_part9.csv" ? "N" :
+            "DB"
+          }
           onDbChange={handleDbChange}
           onExportEdits={exportEdits}
           onImportEdits={importEdits}
@@ -699,14 +731,20 @@ function App() {
           
           {/* ANSWER: Editable div that acts like a rich-text editor */}
           <div
+            ref={answerRef}
             key={`a-${questionId}`}
             className={`ta-resposta ${!effectiveMostrarResposta ? "ta-hidden" : ""} ${getEdit(shortEditKey) ? "ta-edited" : ""}`}
             contentEditable={effectiveMostrarResposta}
             suppressContentEditableWarning={true}
             tabIndex={effectiveMostrarResposta ? 0 : -1}
-            /* We use onBlur instead of onChange for contentEditable so the cursor doesn't jump */
-            onBlur={(e) => saveEdit(shortEditKey, e.currentTarget.innerHTML)}
-            dangerouslySetInnerHTML={{ __html: texto_a }}
+            onFocus={() => {
+              isEditingAnswerRef.current = true
+            }}
+            onBlur={(e) => {
+              isEditingAnswerRef.current = false
+              saveEdit(shortEditKey, e.currentTarget.innerHTML)
+              setEditVersion(v => v + 1)              
+            }}
           />
 
           {effectiveMostrarResposta && (
@@ -746,7 +784,10 @@ function App() {
               <textarea
                 className="answer-modal-textarea"
                 value={texto_a_full}
-                onChange={(e) => saveEdit(fullEditKey, e.target.value)}
+                onChange={(e) => {
+                  saveEdit(fullEditKey, e.target.value)
+                  setEditVersion(v => v + 1)
+                }}
               />
             </div>
           </div>
@@ -780,7 +821,10 @@ function App() {
             {effectiveMostrarResposta && getEdit(shortEditKey) && (
               <button
                 className="btn-reset-edit"
-                onClick={() => clearEdit(shortEditKey)}
+                onClick={() => {
+                  clearEdit(shortEditKey)
+                  setEditVersion(v => v + 1)
+                }}
                 style={{ marginLeft: "4px" }}
               >
                 ↩ Reset

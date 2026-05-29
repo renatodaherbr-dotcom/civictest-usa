@@ -108,6 +108,12 @@ export function HamburgerMenu({
     if (savedA) onTimerA(Number(savedA))          
   }, [])
 
+  const dbBadge =
+    dbFile === "bd_civic2.csv" ? "F" :
+    dbFile === "bd_civic3.csv" ? "S" :
+    dbFile === "bd_n400_part9.csv" ? "N" :
+    "DB"  
+
   return (
     <div className="hamburger-wrap" ref={menuRef}>
       <button
@@ -119,14 +125,37 @@ export function HamburgerMenu({
         <span />
         <span />
         <span />
-        {/* ✅ ponto indicador quando filtro ativo */}
+
+        <span style={{
+          position: "absolute",
+          left: 12,
+          topm: 30,
+          minWidth: 18,
+          height: 18,
+          padding: "0 4px",
+          borderRadius: 999,
+          background: "#1f2937",
+          color: "#fff",
+          fontSize: 10,
+          fontWeight: 700,
+          lineHeight: "18px",
+          textAlign: "center",
+          pointerEvents: "none"
+        }}>
+          {dbBadge}
+        </span>
+
         {levelFilter !== "all" && (
           <span style={{
-            position: "absolute", top: 6, right: 6,
-            width: 7, height: 7, borderRadius: "50%",
+            position: "absolute",
+            top: 0,
+            right: 6,
+            width: 10,
+            height: 10,
+            borderRadius: "50%",
             background: levelColor[levelFilter]
           }} />
-        )}        
+        )}
       </button>
 
       {open && (
