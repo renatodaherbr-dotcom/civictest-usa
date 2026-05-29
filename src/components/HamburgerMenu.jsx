@@ -129,7 +129,7 @@ export function HamburgerMenu({
         <span style={{
           position: "absolute",
           left: 12,
-          topm: 30,
+          top: 30,
           minWidth: 18,
           height: 18,
           padding: "0 4px",
@@ -148,7 +148,7 @@ export function HamburgerMenu({
         {levelFilter !== "all" && (
           <span style={{
             position: "absolute",
-            top: 0,
+            bottom: 30,
             right: 6,
             width: 10,
             height: 10,
